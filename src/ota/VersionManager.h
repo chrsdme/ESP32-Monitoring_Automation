@@ -1,165 +1,125 @@
 /**
  * @file VersionManager.h
- * @brief Manages firmware and filesystem versioning
+ * @brief Manages application version information and updates
  */
 
  #ifndef VERSION_MANAGER_H
  #define VERSION_MANAGER_H
  
  #include <Arduino.h>
- #include <freertos/FreeRTOS.h>
- #include <freertos/semphr.h>
- #include <SPIFFS.h>
+ #include <HTTPClient.h>
  #include "../utils/Constants.h"
- 
- // Forward declarations
- class AppCore;
- 
- /**
-  * @struct Version
-  * @brief Structure to hold version information
-  */
- struct Version {
-     uint8_t major;
-     uint8_t minor;
-     uint8_t patch;
-     String buildId;
-     uint32_t timestamp;
-     
-     Version() : major(0), minor(0), patch(0), buildId(""), timestamp(0) {}
-     
-     Version(uint8_t major, uint8_t minor, uint8_t patch) 
-         : major(major), minor(minor), patch(patch), buildId(""), timestamp(0) {}
-     
-     Version(uint8_t major, uint8_t minor, uint8_t patch, const String& buildId, uint32_t timestamp) 
-         : major(major), minor(minor), patch(patch), buildId(buildId), timestamp(timestamp) {}
-     
-     String toString() const {
-         return String(major) + "." + String(minor) + "." + String(patch) + 
-                (buildId.isEmpty() ? "" : "-" + buildId);
-     }
-     
-     bool isNewerThan(const Version& other) const {
-         if (major > other.major) return true;
-         if (major < other.major) return false;
-         
-         if (minor > other.minor) return true;
-         if (minor < other.minor) return false;
-         
-         if (patch > other.patch) return true;
-         return false;
-     }
-     
-     static Version fromString(const String& versionStr) {
-         Version version;
-         
-         // Parse basic version (major.minor.patch)
-         int firstDot = versionStr.indexOf('.');
-         if (firstDot > 0) {
-             version.major = versionStr.substring(0, firstDot).toInt();
-             
-             int secondDot = versionStr.indexOf('.', firstDot + 1);
-             if (secondDot > 0) {
-                 version.minor = versionStr.substring(firstDot + 1, secondDot).toInt();
-                 
-                 // Check for build ID or just patch
-                 int dashPos = versionStr.indexOf('-', secondDot + 1);
-                 if (dashPos > 0) {
-                     version.patch = versionStr.substring(secondDot + 1, dashPos).toInt();
-                     version.buildId = versionStr.substring(dashPos + 1);
-                 } else {
-                     version.patch = versionStr.substring(secondDot + 1).toInt();
-                 }
-             }
-         }
-         
-         return version;
-     }
- };
  
  /**
   * @class VersionManager
-  * @brief Manages firmware and filesystem versioning and update checks
+  * @brief Manages version information for the application and filesystem
   */
  class VersionManager {
  public:
      VersionManager();
      ~VersionManager();
-     
+ 
      /**
-      * @brief Initialize the version manager
-      * @return True if initialized successfully
+      * @brief Check for available updates
+      * @param currentVersion Current version to compare
+      * @return Update information or empty string if no update available
       */
-     bool begin();
-     
+     String checkForUpdates(const String& currentVersion);
+ 
      /**
-      * @brief Get current firmware version
-      * @return Current firmware version
+      * @brief Get current application version
+      * @return Version string
       */
-     Version getFirmwareVersion();
-     
+     String getCurrentVersion() const;
+ 
      /**
       * @brief Get current filesystem version
-      * @return Current filesystem version
+      * @return Version string
       */
-     Version getFilesystemVersion();
-     
+     String getCurrentFsVersion() const;
+ 
      /**
-      * @brief Set firmware version
-      * @param version Version to set
-      * @return True if version set successfully
+      * @brief Perform version update if available
+      * @return True if update successful, false otherwise
       */
-     bool setFirmwareVersion(const Version& version);
-     
+     bool performUpdate();
+ 
      /**
-      * @brief Set filesystem version
-      * @param version Version to set
-      * @return True if version set successfully
+      * @brief Get major version
+      * @return Major version number
       */
-     bool setFilesystemVersion(const Version& version);
-     
+     uint16_t getMajorVersion() const;
+ 
      /**
-      * @brief Check if a new version is available
-      * @param checkUrl URL to check for updates
-      * @return Update information JSON as a string
+      * @brief Get minor version
+      * @return Minor version number
       */
-     String checkForUpdates(const String& checkUrl = "");
-     
+     uint16_t getMinorVersion() const;
+ 
      /**
-      * @brief Get changelog between current version and target version
-      * @param targetVersion Target version
-      * @return Changelog as a string
+      * @brief Get patch version
+      * @return Patch version number
       */
-     String getChangelog(const Version& targetVersion);
-     
+     uint16_t getPatchVersion() const;
+ 
      /**
-      * @brief Store version history
-      * @param version Version that was installed
-      * @param type 0 for firmware, 1 for filesystem
-      * @param status Installation status
-      * @return True if history stored successfully
+      * @brief Get build version
+      * @return Build version number
       */
-     bool storeVersionHistory(const Version& version, uint8_t type, bool status);
-     
+     uint16_t getBuildVersion() const;
+ 
      /**
-      * @brief Get version history
-      * @return Version history as JSON string
+      * @brief Get version timestamp
+      * @return Version timestamp
       */
-     String getVersionHistory();
-     
+     uint32_t getVersionTimestamp() const;
+ 
  private:
-     // Current versions
-     Version _firmwareVersion;
-     Version _filesystemVersion;
-     
-     // RTOS resources
-     SemaphoreHandle_t _versionMutex;
-     
-     // Helper methods
-     bool loadVersions();
-     bool saveVersions();
-     String getVersionFile();
-     bool parseVersionFile(const String& content);
+     // Version parsing and storage
+     uint16_t _majorVersion;
+     uint16_t _minorVersion;
+     uint16_t _patchVersion;
+     uint16_t _buildVersion;
+     uint32_t _versionTimestamp;
+ 
+     // Filesystem version components
+     uint16_t _fsMajorVersion;
+     uint16_t _fsMinorVersion;
+     uint16_t _fsPatchVersion;
+     uint16_t _fsBuildVersion;
+     uint32_t _fsVersionTimestamp;
+ 
+     // HTTP client for update checks
+     HTTPClient _httpClient;
+ 
+     /**
+      * @brief Parse version string
+      * @param version Version string to parse
+      * @param major Output major version
+      * @param minor Output minor version
+      * @param patch Output patch version
+      * @param build Output build version
+      * @param timestamp Output version timestamp
+      */
+     void parseVersion(const String& version, 
+                       uint16_t& major, 
+                       uint16_t& minor, 
+                       uint16_t& patch, 
+                       uint16_t& build, 
+                       uint32_t& timestamp);
+ 
+     /**
+      * @brief Download update file
+      * @param url URL of update file
+      * @return True if download successful, false otherwise
+      */
+     bool downloadUpdateFile(const String& url);
+ 
+     /**
+      * @brief Validate downloaded update
+      * @return True if update is valid, false otherwise
+      */
+     bool validateUpdate();
  };
  
  #endif // VERSION_MANAGER_H

@@ -251,7 +251,7 @@ Custom partition table to optimize space allocation:
 
 - **Factory**: 1.5MB for firmware
 - **OTA_0**: 1.5MB for OTA updates
-- **SPIFFS**: 2MB for file system
+- **SPIFFS**: 1MB for file system
 
 ### Build Flags
 

@@ -22,7 +22,7 @@
  #include "../system/PowerManager.h"
  #include "../system/NotificationManager.h"
  #include "../system/ProfileManager.h"
- #include "../web/WebServer.h"
+ #include "../web/SecureWebServer.h"  // Changed from WebServer.h
  #include "../ota/OTAManager.h"
  #include "../components/SensorManager.h"
  #include "../components/RelayManager.h"
@@ -79,7 +79,10 @@
      PowerManager* getPowerManager() { return &_powerManager; }
      NotificationManager* getNotificationManager() { return &_notificationManager; }
      ProfileManager* getProfileManager() { return &_profileManager; }
-     WebServer* getWebServer() { return &_webServer; }
+     
+     // Explicitly return SecureWebServer
+     SecureWebServer* getWebServer() { return &_webServer; }
+     
      OTAManager* getOTAManager() { return &_otaManager; }
      SensorManager* getSensorManager() { return &_sensorManager; }
      RelayManager* getRelayManager() { return &_relayManager; }
@@ -105,7 +108,7 @@
      PowerManager _powerManager;
      NotificationManager _notificationManager;
      ProfileManager _profileManager;
-     WebServer _webServer;
+     SecureWebServer _webServer;  // Changed from WebServer
      OTAManager _otaManager;
      SensorManager _sensorManager;
      RelayManager _relayManager;

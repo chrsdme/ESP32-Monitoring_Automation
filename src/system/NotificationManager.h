@@ -6,6 +6,7 @@
  #ifndef NOTIFICATION_MANAGER_H
  #define NOTIFICATION_MANAGER_H
  
+ #include <map>
  #include <Arduino.h>
  #include <freertos/FreeRTOS.h>
  #include <freertos/task.h>

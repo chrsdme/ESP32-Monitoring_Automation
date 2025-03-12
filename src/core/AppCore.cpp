@@ -180,12 +180,16 @@
  }
  
  void AppCore::onWiFiDisconnected() {
-     _logManager.log(LogLevel::WARN, "System", "WiFi disconnected. Attempting to reconnect...");
- }, "Configuration mode started. Connect to WiFi AP '" + String(Constants::DEFAULT_AP_SSID) + "' and visit http://192.168.4.1 to configure the device");
-     
-     // Initialize RTOS tasks for setup mode
-     initRTOSTasks();
- }
+    _logManager.log(LogLevel::WARN, "System", "WiFi disconnected. Attempting to reconnect...");
+    
+    _logManager.log(LogLevel::INFO, "System", 
+        "Configuration mode started. Connect to WiFi AP '" + 
+        String(Constants::DEFAULT_AP_SSID) + 
+        "' and visit http://192.168.4.1 to configure the device");
+    
+    // Initialize RTOS tasks for setup mode
+    initRTOSTasks();
+}
  
  void AppCore::startNormalOperation() {
      _logManager.log(LogLevel::INFO, "System", "Starting normal operation mode");

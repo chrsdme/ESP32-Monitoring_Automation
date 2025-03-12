@@ -173,7 +173,7 @@
      
      // API implementation
      bool authenticate();
-     bool sendDeviceCommand(const String& ipAddress, const String& command, JsonVariant& payload = JsonVariant());
+     bool sendDeviceCommand(const String& ipAddress, const String& command, const JsonVariant& payload = JsonVariant());
      bool refreshToken();
      String getDeviceToken(const String& ipAddress);
      
