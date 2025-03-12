@@ -108,8 +108,16 @@
      bool createDefaultProfiles();
      
  private:
-     // Profile data
-     std::map<String, DynamicJsonDocument> _profiles;
+     // Profile data structure using a simple approach
+     struct ProfileEntry {
+         String name;
+         DynamicJsonDocument doc;
+         
+         // Constructor to prevent default constructor issues
+         ProfileEntry(const String& n) : name(n), doc(8192) {}
+     };
+     
+     std::vector<ProfileEntry> _profiles;
      String _currentProfile;
      
      // MQTT status
@@ -122,6 +130,16 @@
      bool loadProfilesFromFile();
      bool saveProfilesToFile();
      void applyProfileSettings(const DynamicJsonDocument& profileSettings);
+     
+     // Helper method to find a profile by name
+     int findProfileIndex(const String& name) {
+         for (size_t i = 0; i < _profiles.size(); i++) {
+             if (_profiles[i].name == name) {
+                 return i;
+             }
+         }
+         return -1;
+     }
  };
  
  #endif // PROFILE_MANAGER_H

@@ -63,8 +63,8 @@
      
      // Take mutex to ensure thread safety
      if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-         for (const auto& entry : _profiles) {
-             names.push_back(entry.first);
+         for (const auto& profile : _profiles) {
+             names.push_back(profile.name);
          }
          
          // Release mutex
@@ -94,10 +94,10 @@
      // Take mutex to ensure thread safety
      if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
          // Check if profile exists
-         auto it = _profiles.find(name);
-         if (it != _profiles.end()) {
+         int idx = findProfileIndex(name);
+         if (idx >= 0) {
              // Serialize profile to JSON
-             serializeJson(it->second, json);
+             serializeJson(_profiles[idx].doc, json);
          }
          
          // Release mutex
@@ -108,30 +108,58 @@
  }
  
  String ProfileManager::getProfilesJson() {
-     String json;
-     
-     // Take mutex to ensure thread safety
-     if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-         // Create JSON document with all profiles
-         DynamicJsonDocument doc(16384);  // Adjust size based on expected number of profiles
-         JsonObject profilesObj = doc.createNestedObject("profiles");
-         
-         for (const auto& entry : _profiles) {
-             JsonObject profileObj = profilesObj.createNestedObject(entry.first);
-             profileObj.set(entry.second.as<JsonObject>());
-         }
-         
-         doc["current_profile"] = _currentProfile;
-         
-         // Serialize to JSON
-         serializeJson(doc, json);
-         
-         // Release mutex
-         xSemaphoreGive(_profileMutex);
-     }
-     
-     return json;
- }
+    String json;
+    
+    // Take mutex to ensure thread safety
+    if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        // Create JSON document with all profiles
+        DynamicJsonDocument doc(16384);  // Adjust size based on expected number of profiles
+        JsonObject profilesObj = doc.createNestedObject("profiles");
+        
+        for (const auto& profile : _profiles) {
+            JsonObject profileObj = profilesObj.createNestedObject(profile.name);
+            
+            // Manually copy all properties from the profile document to avoid type conversion issues
+            JsonObject src = profile.doc.as<JsonObject>();
+            for (JsonPair kv : src) {
+                // For each key-value pair in the source object
+                String key = kv.key().c_str();
+                JsonVariant value = kv.value();
+                
+                if (value.is<JsonObject>()) {
+                    // If the value is an object, create a nested object and copy its properties
+                    JsonObject nestedObj = profileObj.createNestedObject(key);
+                    JsonObject srcNestedObj = value.as<JsonObject>();
+                    
+                    for (JsonPair nestedKv : srcNestedObj) {
+                        nestedObj[nestedKv.key()] = nestedKv.value();
+                    }
+                } else if (value.is<JsonArray>()) {
+                    // If the value is an array, create a nested array and copy its elements
+                    JsonArray nestedArr = profileObj.createNestedArray(key);
+                    JsonArray srcNestedArr = value.as<JsonArray>();
+                    
+                    for (size_t i = 0; i < srcNestedArr.size(); i++) {
+                        nestedArr.add(srcNestedArr[i]);
+                    }
+                } else {
+                    // For primitive values, just copy directly
+                    profileObj[key] = value;
+                }
+            }
+        }
+        
+        doc["current_profile"] = _currentProfile;
+        
+        // Serialize to JSON
+        serializeJson(doc, json);
+        
+        // Release mutex
+        xSemaphoreGive(_profileMutex);
+    }
+    
+    return json;
+}
  
  bool ProfileManager::saveProfile(const String& name, const JsonObject& settings) {
      if (name.isEmpty()) {
@@ -140,18 +168,22 @@
      
      // Take mutex to ensure thread safety
      if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-         // Create or update profile
-         DynamicJsonDocument& profile = _profiles[name];
+         // Find existing profile or create a new one
+         int idx = findProfileIndex(name);
          
-         // If profile doesn't exist yet, create it
-         if (profile.isNull()) {
-             profile = DynamicJsonDocument(8192);
+         if (idx < 0) {
+             // Create new profile
+             ProfileEntry newProfile(name);
+             _profiles.push_back(newProfile);
+             idx = _profiles.size() - 1;                                
          }
          
-         // Copy settings to profile
-         JsonObject profileObj = profile.to<JsonObject>();
-         profileObj.clear();
-         profileObj.set(settings);
+         // Update profile settings
+         _profiles[idx].doc.clear();
+         JsonObject dest = _profiles[idx].doc.to<JsonObject>();
+         for (JsonPair kv : settings) {
+             dest[kv.key()] = kv.value();
+         }
          
          // Save to file
          bool success = saveProfilesToFile();
@@ -177,8 +209,8 @@
      // Take mutex to ensure thread safety
      if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
          // Check if profile exists
-         auto it = _profiles.find(name);
-         if (it == _profiles.end()) {
+         int idx = findProfileIndex(name);
+         if (idx < 0) {
              getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
                  "Profile not found: " + name);
              
@@ -188,7 +220,7 @@
          }
          
          // Apply profile settings
-         applyProfileSettings(it->second);
+         applyProfileSettings(_profiles[idx].doc);
          
          // Set as current profile
          _currentProfile = name;
@@ -213,20 +245,17 @@
      // Take mutex to ensure thread safety
      if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
          // Check if old profile exists and new name doesn't
-         auto itOld = _profiles.find(oldName);
-         auto itNew = _profiles.find(newName);
+         int oldIdx = findProfileIndex(oldName);
+         int newIdx = findProfileIndex(newName);
          
-         if (itOld == _profiles.end() || itNew != _profiles.end()) {
+         if (oldIdx < 0 || newIdx >= 0) {
              // Release mutex
              xSemaphoreGive(_profileMutex);
              return false;
          }
          
-         // Copy profile to new name
-         _profiles[newName] = itOld->second;
-         
-         // Remove old profile
-         _profiles.erase(itOld);
+         // Rename profile
+         _profiles[oldIdx].name = newName;
          
          // Update current profile if needed
          if (_currentProfile == oldName) {
@@ -261,8 +290,8 @@
      // Take mutex to ensure thread safety
      if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
          // Check if profile exists
-         auto it = _profiles.find(name);
-         if (it == _profiles.end()) {
+         int idx = findProfileIndex(name);
+         if (idx < 0) {
              // Release mutex
              xSemaphoreGive(_profileMutex);
              return false;
@@ -270,16 +299,16 @@
          
          // If deleting current profile, switch to another one
          if (_currentProfile == name) {
-             for (const auto& entry : _profiles) {
-                 if (entry.first != name) {
-                     _currentProfile = entry.first;
+             for (const auto& profile : _profiles) {
+                 if (profile.name != name) {
+                     _currentProfile = profile.name;
                      break;
                  }
              }
          }
          
          // Remove profile
-         _profiles.erase(it);
+         _profiles.erase(_profiles.begin() + idx);
          
          // Save changes
          bool success = saveProfilesToFile();
@@ -319,32 +348,39 @@
              String name = kv.key().c_str();
              JsonObject settings = kv.value().as<JsonObject>();
              
-             DynamicJsonDocument profile(8192);
-             JsonObject profileObj = profile.to<JsonObject>();
-             profileObj.set(settings);
              
-             _profiles[name] = profile;
+             ProfileEntry entry(name);
+             JsonObject profileData = entry.doc.to<JsonObject>();
+             
+             // Copy settings to profile document
+             for (JsonPair settingKv : settings) {
+                 profileData[settingKv.key()] = settingKv.value();
+             }
+             
+             _profiles.push_back(entry);
          }
          
-         // Get current profile
-         if (json.as<JsonObject>().containsKey("current_profile")) {
-             String currentProfile = json.as<JsonObject>()["current_profile"].as<String>();
-             
-             // Check if the profile exists
-             auto it = _profiles.find(currentProfile);
-             if (it != _profiles.end()) {
-                 _currentProfile = currentProfile;
-             } else if (!_profiles.empty()) {
-                 _currentProfile = _profiles.begin()->first;
-             }
-         } else if (!_profiles.empty()) {
-             _currentProfile = _profiles.begin()->first;
-         }
+         if (doc.containsKey("current_profile")) {
+            String name = doc["current_profile"].as<String>();
+            
+            // Check if the profile exists
+            int idx = findProfileIndex(name);
+            if (idx >= 0) {
+                _currentProfile = name;
+            } else if (!_profiles.empty()) {
+                _currentProfile = _profiles[0].name;
+            }
+        } else if (!_profiles.empty()) {
+            _currentProfile = _profiles[0].name;
+        }
          
          // Save changes and load current profile
          bool success = saveProfilesToFile();
          if (success && !_currentProfile.isEmpty()) {
-             applyProfileSettings(_profiles[_currentProfile]);
+             idx = findProfileIndex(_currentProfile);
+             if (idx >= 0) {
+                 applyProfileSettings(_profiles[idx].doc);
+             }
          }
          
          // Release mutex
@@ -370,9 +406,9 @@
          // Clear existing profiles
          _profiles.clear();
          
-         // Create default profiles
-         DynamicJsonDocument defaultProfile(8192);
-         JsonObject defaultObj = defaultProfile.to<JsonObject>();
+         // Create default profile
+         ProfileEntry defaultProfile("Default");
+         JsonObject defaultObj = defaultProfile.doc.to<JsonObject>();
          
          // Default profile settings
          defaultObj["name"] = "Default";
@@ -412,11 +448,11 @@
              relayObj["end_minute"] = 59;
          }
          
-         _profiles["Default"] = defaultProfile;
+         _profiles.push_back(defaultProfile);
          
          // Create Test profile
-         DynamicJsonDocument testProfile(8192);
-         JsonObject testObj = testProfile.to<JsonObject>();
+         ProfileEntry testProfile("Test");
+         JsonObject testObj = testProfile.doc.to<JsonObject>();
          
          // Test profile settings (similar to default but with different thresholds)
          testObj["name"] = "Test";
@@ -456,11 +492,11 @@
              relayObj["end_minute"] = 0;
          }
          
-         _profiles["Test"] = testProfile;
+         _profiles.push_back(testProfile);
          
          // Create Colonization profile
-         DynamicJsonDocument colonizationProfile(8192);
-         JsonObject colonizationObj = colonizationProfile.to<JsonObject>();
+         ProfileEntry colonizationProfile("Colonization");
+         JsonObject colonizationObj = colonizationProfile.doc.to<JsonObject>();
          
          // Colonization profile settings
          colonizationObj["name"] = "Colonization";
@@ -512,11 +548,11 @@
              }
          }
          
-         _profiles["Colonization"] = colonizationProfile;
+         _profiles.push_back(colonizationProfile);
          
          // Create Fruiting profile
-         DynamicJsonDocument fruitingProfile(8192);
-         JsonObject fruitingObj = fruitingProfile.to<JsonObject>();
+         ProfileEntry fruitingProfile("Fruiting");
+         JsonObject fruitingObj = fruitingProfile.doc.to<JsonObject>();
          
          // Fruiting profile settings
          fruitingObj["name"] = "Fruiting";
@@ -568,7 +604,7 @@
              }
          }
          
-         _profiles["Fruiting"] = fruitingProfile;
+         _profiles.push_back(fruitingProfile);
          
          // Set default as current profile
          _currentProfile = "Default";
@@ -586,203 +622,51 @@
  }
  
  bool ProfileManager::loadProfilesFromFile() {
-     // Check if profiles file exists
-     if (!SPIFFS.exists(Constants::PROFILES_FILE)) {
-         getAppCore()->getLogManager()->log(LogLevel::WARN, "Profiles", 
-             "Profiles file not found: " + String(Constants::PROFILES_FILE));
-         return false;
-     }
+    // Check if profiles file exists
+    if (!SPIFFS.exists(Constants::PROFILES_FILE)) {
+        getAppCore()->getLogManager()->log(LogLevel::WARN, "Profiles", 
+            "Profiles file not found: " + String(Constants::PROFILES_FILE));
+        return false;
+    }
      
-     // Open profiles file
-     File file = SPIFFS.open(Constants::PROFILES_FILE, FILE_READ);
-     if (!file) {
-         getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
-             "Failed to open profiles file: " + String(Constants::PROFILES_FILE));
-         return false;
-     }
+    // Open profiles file
+    File file = SPIFFS.open(Constants::PROFILES_FILE, FILE_READ);
+    if (!file) {
+        getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
+            "Failed to open profiles file: " + String(Constants::PROFILES_FILE));
+        return false;
+    }
      
-     // Read file content
-     size_t size = file.size();
-     std::unique_ptr<char[]> buf(new char[size + 1]);
-     file.readBytes(buf.get(), size);
-     buf[size] = '\0';
-     file.close();
+    // Read file content
+    size_t size = file.size();
+    std::unique_ptr<char[]> buf(new char[size + 1]);
+    file.readBytes(buf.get(), size);
+    buf[size] = '\0';
+    file.close();
      
-     // Parse JSON
-     DynamicJsonDocument doc(16384);
-     DeserializationError error = deserializeJson(doc, buf.get());
+    // Parse JSON
+    DynamicJsonDocument doc(16384);
+    DeserializationError error = deserializeJson(doc, buf.get());
+    
+    if (error) {
+        getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
+            "Failed to parse profiles file: " + String(error.c_str()));
+        return false;
+    }
      
-     if (error) {
-         getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
-             "Failed to parse profiles file: " + String(error.c_str()));
-         return false;
-     }
-     
-     // Take mutex to ensure thread safety
-     if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-         // Clear existing profiles
-         _profiles.clear();
-         
-         // Load profiles
-         JsonObject profilesObj = doc["profiles"].as<JsonObject>();
-         for (JsonPair kv : profilesObj) {
-             String name = kv.key().c_str();
-             JsonObject settings = kv.value().as<JsonObject>();
+// Take mutex to ensure thread safety
+if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+    // Clear existing profiles
+    _profiles.clear();
+    
+    // Load profiles
+    JsonObject profilesObj = doc["profiles"].as<JsonObject>();
+    for (JsonPair kv : profilesObj) {
+        String name = kv.key().c_str();
              
-             DynamicJsonDocument profile(8192);
-             JsonObject profileObj = profile.to<JsonObject>();
-             profileObj.set(settings);
-             
-             _profiles[name] = profile;
-         }
-         
-         // Get current profile
-         if (doc.containsKey("current_profile")) {
-             String currentProfile = doc["current_profile"].as<String>();
-             
-             // Check if the profile exists
-             auto it = _profiles.find(currentProfile);
-             if (it != _profiles.end()) {
-                 _currentProfile = currentProfile;
-             } else if (!_profiles.empty()) {
-                 _currentProfile = _profiles.begin()->first;
+             // Copy settings to profile document
+             for (JsonPair settingKv : settings) {
+                 dest[settingKv.key()] = settingKv.value();
              }
-         } else if (!_profiles.empty()) {
-             _currentProfile = _profiles.begin()->first;
-         }
-         
-         // Release mutex
-         xSemaphoreGive(_profileMutex);
-         
-         getAppCore()->getLogManager()->log(LogLevel::INFO, "Profiles", 
-             "Profiles loaded from file: " + String(Constants::PROFILES_FILE));
-         
-         return true;
-     }
-     
-     return false;
- }
- 
- bool ProfileManager::saveProfilesToFile() {
-     // Create directory if it doesn't exist
-     String configDir = "/config";
-     if (!SPIFFS.exists(configDir)) {
-         SPIFFS.mkdir(configDir);
-     }
-     
-     // Create JSON document with all profiles
-     DynamicJsonDocument doc(16384);
-     JsonObject profilesObj = doc.createNestedObject("profiles");
-     
-     for (const auto& entry : _profiles) {
-         JsonObject profileObj = profilesObj.createNestedObject(entry.first);
-         profileObj.set(entry.second.as<JsonObject>());
-     }
-     
-     doc["current_profile"] = _currentProfile;
-     
-     // Open file for writing
-     File file = SPIFFS.open(Constants::PROFILES_FILE, FILE_WRITE);
-     if (!file) {
-         getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
-             "Failed to open profiles file for writing: " + String(Constants::PROFILES_FILE));
-         return false;
-     }
-     
-     // Write JSON to file
-     if (serializeJson(doc, file) == 0) {
-         file.close();
-         getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
-             "Failed to write profiles to file: " + String(Constants::PROFILES_FILE));
-         return false;
-     }
-     
-     file.close();
-     
-     getAppCore()->getLogManager()->log(LogLevel::INFO, "Profiles", 
-         "Profiles saved to file: " + String(Constants::PROFILES_FILE));
-     
-     return true;
- }
- 
- void ProfileManager::applyProfileSettings(const DynamicJsonDocument& profileSettings) {
-     // Apply environment settings
-     if (profileSettings.containsKey("environment")) {
-         JsonObject environmentObj = profileSettings["environment"].as<JsonObject>();
-         
-         if (environmentObj.containsKey("humidity_low") && environmentObj.containsKey("humidity_high") && 
-             environmentObj.containsKey("temperature_low") && environmentObj.containsKey("temperature_high") && 
-             environmentObj.containsKey("co2_low") && environmentObj.containsKey("co2_high")) {
              
-             getAppCore()->getRelayManager()->setEnvironmentalThresholds(
-                 environmentObj["humidity_low"].as<float>(),
-                 environmentObj["humidity_high"].as<float>(),
-                 environmentObj["temperature_low"].as<float>(),
-                 environmentObj["temperature_high"].as<float>(),
-                 environmentObj["co2_low"].as<float>(),
-                 environmentObj["co2_high"].as<float>()
-             );
-         }
-     }
-     
-     // Apply timing settings
-     if (profileSettings.containsKey("timing")) {
-         JsonObject timingObj = profileSettings["timing"].as<JsonObject>();
-         
-         if (timingObj.containsKey("dht_interval") && timingObj.containsKey("scd_interval")) {
-             getAppCore()->getSensorManager()->setSensorIntervals(
-                 timingObj["dht_interval"].as<uint32_t>() * 1000,  // Convert to milliseconds
-                 timingObj["scd_interval"].as<uint32_t>() * 1000
-             );
-         }
-         
-         // Graph settings would be applied elsewhere
-     }
-     
-     // Apply cycle settings
-     if (profileSettings.containsKey("cycle")) {
-         JsonObject cycleObj = profileSettings["cycle"].as<JsonObject>();
-         
-         if (cycleObj.containsKey("on_duration") && cycleObj.containsKey("interval")) {
-             getAppCore()->getRelayManager()->setCycleConfig(
-                 cycleObj["on_duration"].as<uint16_t>(),
-                 cycleObj["interval"].as<uint16_t>()
-             );
-         }
-     }
-     
-     // Apply relay operating times
-     if (profileSettings.containsKey("relay_times")) {
-         JsonObject relayTimesObj = profileSettings["relay_times"].as<JsonObject>();
-         
-         for (int i = 1; i <= 8; i++) {
-             String relayKey = "relay" + String(i);
-             if (relayTimesObj.containsKey(relayKey)) {
-                 JsonObject relayObj = relayTimesObj[relayKey].as<JsonObject>();
-                 
-                 if (relayObj.containsKey("start_hour") && relayObj.containsKey("start_minute") && 
-                     relayObj.containsKey("end_hour") && relayObj.containsKey("end_minute")) {
-                     
-                     getAppCore()->getRelayManager()->setRelayOperatingTime(
-                         i,
-                         relayObj["start_hour"].as<uint8_t>(),
-                         relayObj["start_minute"].as<uint8_t>(),
-                         relayObj["end_hour"].as<uint8_t>(),
-                         relayObj["end_minute"].as<uint8_t>()
-                     );
-                 }
-             }
-         }
-     }
-     
-     // Apply MQTT settings
-     if (profileSettings.containsKey("mqtt")) {
-         JsonObject mqttObj = profileSettings["mqtt"].as<JsonObject>();
-         
-         if (mqttObj.containsKey("enabled")) {
-             _mqttEnabled = mqttObj["enabled"].as<bool>();
-         }
-         
-         // Other MQTT settings would be applied to an MQTT client in a real implementation
-     }
- }
+             _profiles.push_back(entry

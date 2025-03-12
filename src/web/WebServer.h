@@ -7,7 +7,8 @@
  #define WEB_SERVER_H
  
  #include <Arduino.h>
- #include <ESPAsyncWebServer.h>
+ // Use our wrapper instead of direct inclusion
+ #include "AsyncWebServerWrapper.h"
  #include <AsyncJson.h>
  #include <ArduinoJson.h>
  #include <SPIFFS.h>
@@ -52,8 +53,6 @@
       * @return True if port set successfully
       */
      bool setPort(uint16_t port);
-
-     
      
      /**
       * @brief Get web server port
@@ -67,10 +66,7 @@
       * @param password Password
       * @return True if credentials set successfully
       */
-      bool authenticate(AsyncWebServerRequest* request);
-      bool setHttpAuth(const String& username, const String& password);
-
-     AsyncWebServer* getAsyncWebServer() { return _server; }
+     bool setHttpAuth(const String& username, const String& password);
      
      /**
       * @brief Get HTTP authentication credentials
@@ -84,6 +80,19 @@
       * @brief Create RTOS tasks for web server operations
       */
      void createTasks();
+     
+     /**
+      * @brief Get the AsyncWebServer instance
+      * @return Pointer to the AsyncWebServer
+      */
+     AsyncWebServer* getServer() { return _server; }
+     
+     /**
+      * @brief Authenticate a request
+      * @param request HTTP request to authenticate
+      * @return True if authentication successful
+      */
+     bool authenticate(AsyncWebServerRequest* request);
      
  private:
      // Web server instance
@@ -106,7 +115,6 @@
      void setupConfigModeRoutes();
      void setupNormalModeRoutes();
      void setupCommonRoutes();
-     
      
      void handleWiFiScan(AsyncWebServerRequest* request);
      void handleTestWiFi(AsyncWebServerRequest* request, JsonVariant& json);
@@ -142,4 +150,3 @@
  };
  
  #endif // WEB_SERVER_H
- 

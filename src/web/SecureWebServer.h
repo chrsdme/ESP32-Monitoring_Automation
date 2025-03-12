@@ -6,6 +6,9 @@
  #ifndef SECURE_WEB_SERVER_H
  #define SECURE_WEB_SERVER_H
  
+ // Use our wrappers to fix various issues
+ #include "IPAddressWrapper.h"
+ 
  // ESP-IDF headers
  #include <esp_system.h>
  #include <esp_tls.h>
@@ -91,6 +94,9 @@
      void createTasks();
  
  private:
+     // Static instance pointer for callback functions
+     static SecureWebServer* _instance;
+ 
      // Server configuration
      SSLCert* _serverCertificate;
      HTTPSServer* _secureServer;
@@ -99,8 +105,6 @@
      uint16_t _port;
      String _username;
      String _password;
-
-     String decodeBase64(const String& input);
  
      // Status tracking
      bool _isRunning;
@@ -134,21 +138,24 @@
       */
      bool authenticate(HTTPRequest* request, HTTPResponse* response);
  
-     // Route handler method declarations
+     /**
+      * @brief Decode base64 string (used for Basic Auth)
+      * @param input Base64 encoded string
+      * @return Decoded string
+      */
+     String decodeBase64(const String& input);
+ 
+     // Static handler methods for callbacks
+     static void handleWiFiScanStatic(HTTPRequest* request, HTTPResponse* response);
+     static void handleTestWiFiStatic(HTTPRequest* request, HTTPResponse* response);
+     static void handleSaveSettingsStatic(HTTPRequest* request, HTTPResponse* response);
+     static void handleGetSensorDataStatic(HTTPRequest* request, HTTPResponse* response);
+     
+     // Instance handler methods
      void handleWiFiScan(HTTPRequest* request, HTTPResponse* response);
      void handleTestWiFi(HTTPRequest* request, HTTPResponse* response);
      void handleSaveSettings(HTTPRequest* request, HTTPResponse* response);
      void handleGetSensorData(HTTPRequest* request, HTTPResponse* response);
-
-     // Static handler functions for routes
-    static void handleRootStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response);
-    static void handleLoginStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response);
-    static void handleSetupStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response);
-    static void handleDashboardStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response);
-
-// Static instance pointer for callbacks
-static SecureWebServer* _instance;
-
  };
  
  #endif // SECURE_WEB_SERVER_H

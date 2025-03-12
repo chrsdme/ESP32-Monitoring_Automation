@@ -22,103 +22,104 @@
  }
  
  void APIEndpoints::registerEndpoints() {
-    AsyncWebServer* server = _webServer->getAsyncWebServer();
-     
-     // Sensor endpoints
-     server->on("/api/sensors/data", HTTP_GET, std::bind(&APIEndpoints::handleGetSensorData, this, std::placeholders::_1));
-     server->on("/api/sensors/graph", HTTP_GET, std::bind(&APIEndpoints::handleGetGraphData, this, std::placeholders::_1));
-     server->on("/api/sensors/test", HTTP_POST, std::bind(&APIEndpoints::handleTestSensor, this, std::placeholders::_1));
-     server->on("/api/sensors/reset", HTTP_POST, std::bind(&APIEndpoints::handleResetSensor, this, std::placeholders::_1));
-     
-     // Relay endpoints
-     server->on("/api/relays/status", HTTP_GET, std::bind(&APIEndpoints::handleGetRelayStatus, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/relays/set", 
-         std::bind(&APIEndpoints::handleSetRelayState, this, std::placeholders::_1, std::placeholders::_2)));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/relays/operating-time", 
-         std::bind(&APIEndpoints::handleSetRelayOperatingTime, this, std::placeholders::_1, std::placeholders::_2)));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/relays/cycle-config", 
-         std::bind(&APIEndpoints::handleSetCycleConfig, this, std::placeholders::_1, std::placeholders::_2)));
-     
-     // Settings endpoints
-     server->on("/api/settings", HTTP_GET, std::bind(&APIEndpoints::handleGetSettings, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/settings/update", 
-         std::bind(&APIEndpoints::handleUpdateSettings, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/environment/thresholds", HTTP_GET, std::bind(&APIEndpoints::handleGetEnvironmentalThresholds, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/environment/update", 
-         std::bind(&APIEndpoints::handleUpdateEnvironmentalThresholds, this, std::placeholders::_1, std::placeholders::_2)));
-     
-     // Network endpoints
-     server->on("/api/network/config", HTTP_GET, std::bind(&APIEndpoints::handleGetNetworkConfig, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/network/update", 
-         std::bind(&APIEndpoints::handleUpdateNetworkConfig, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/wifi/scan", HTTP_GET, std::bind(&APIEndpoints::handleWiFiScan, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/wifi/test", 
-         std::bind(&APIEndpoints::handleTestWiFi, this, std::placeholders::_1, std::placeholders::_2)));
-     
-     // System endpoints
-     server->on("/api/system/info", HTTP_GET, std::bind(&APIEndpoints::handleGetSystemInfo, this, std::placeholders::_1));
-     server->on("/api/system/files", HTTP_GET, std::bind(&APIEndpoints::handleGetFilesList, this, std::placeholders::_1));
-     server->on("/api/system/delete", HTTP_DELETE, std::bind(&APIEndpoints::handleFileDelete, this, std::placeholders::_1));
-     server->on("/api/system/reboot", HTTP_POST, std::bind(&APIEndpoints::handleReboot, this, std::placeholders::_1));
-     server->on("/api/system/factory-reset", HTTP_POST, std::bind(&APIEndpoints::handleFactoryReset, this, std::placeholders::_1));
-     
-     // File upload handler
-     server->on("/api/upload", HTTP_POST, 
-         [](AsyncWebServerRequest* request) { request->send(200); },
-         std::bind(&APIEndpoints::handleFileUpload, this, std::placeholders::_1, std::placeholders::_2, 
-                   std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
-     
-     // Profile endpoints
-     server->on("/api/profiles", HTTP_GET, std::bind(&APIEndpoints::handleGetProfiles, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/profiles/save", 
-         std::bind(&APIEndpoints::handleSaveProfile, this, std::placeholders::_1, std::placeholders::_2)));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/profiles/load", 
-         std::bind(&APIEndpoints::handleLoadProfile, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/profiles/export", HTTP_GET, std::bind(&APIEndpoints::handleExportProfiles, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/profiles/import", 
-         std::bind(&APIEndpoints::handleImportProfiles, this, std::placeholders::_1, std::placeholders::_2)));
-     
-     // OTA update endpoints
-     server->on("/api/ota/status", HTTP_GET, std::bind(&APIEndpoints::handleOTAStatus, this, std::placeholders::_1));
-     server->on("/api/ota/update", HTTP_POST, std::bind(&APIEndpoints::handleOTAUpdate, this, std::placeholders::_1));
-     
-     // Maintenance endpoints
-     server->on("/api/maintenance/diagnostics", HTTP_GET, std::bind(&APIEndpoints::handleRunDiagnostics, this, std::placeholders::_1));
-     server->on("/api/maintenance/health", HTTP_GET, std::bind(&APIEndpoints::handleGetSystemHealth, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/maintenance/reboot-schedule", 
-         std::bind(&APIEndpoints::handleSetRebootSchedule, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/maintenance/reboot-schedule", HTTP_GET, std::bind(&APIEndpoints::handleGetRebootSchedule, this, std::placeholders::_1));
-     
-     // Power management endpoints
-     server->on("/api/power/mode", HTTP_GET, std::bind(&APIEndpoints::handleGetPowerMode, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/power/mode", 
-         std::bind(&APIEndpoints::handleSetPowerMode, this, std::placeholders::_1, std::placeholders::_2)));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/power/schedule", 
-         std::bind(&APIEndpoints::handleSetPowerSchedule, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/power/schedule", HTTP_GET, std::bind(&APIEndpoints::handleGetPowerSchedule, this, std::placeholders::_1));
-     
-     // Notification endpoints
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/notifications/send", 
-         std::bind(&APIEndpoints::handleSendNotification, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/notifications/recent", HTTP_GET, std::bind(&APIEndpoints::handleGetRecentNotifications, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/notifications/configure", 
-         std::bind(&APIEndpoints::handleConfigureNotifications, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/notifications/test", HTTP_POST, std::bind(&APIEndpoints::handleTestNotificationChannel, this, std::placeholders::_1));
-     
-     // Tapo device endpoints
-     server->on("/api/tapo/devices", HTTP_GET, std::bind(&APIEndpoints::handleGetTapoDevices, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/tapo/add", 
-         std::bind(&APIEndpoints::handleAddTapoDevice, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/tapo/remove", HTTP_DELETE, std::bind(&APIEndpoints::handleRemoveTapoDevice, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/tapo/control", 
-         std::bind(&APIEndpoints::handleControlTapoDevice, this, std::placeholders::_1, std::placeholders::_2)));
-     
-     // Logging endpoints
-     server->on("/api/logs", HTTP_GET, std::bind(&APIEndpoints::handleGetLogs, this, std::placeholders::_1));
-     server->addHandler(new AsyncCallbackJsonWebHandler("/api/logs/level", 
-         std::bind(&APIEndpoints::handleSetLogLevel, this, std::placeholders::_1, std::placeholders::_2)));
-     server->on("/api/logs/clear", HTTP_POST, std::bind(&APIEndpoints::handleClearLogs, this, std::placeholders::_1));
- }
+    // Get the server instance using the correct method name
+    AsyncWebServer* server = _webServer->getServer();
+    
+    // Sensor endpoints
+    server->on("/api/sensors/data", HTTP_GET, std::bind(&APIEndpoints::handleGetSensorData, this, std::placeholders::_1));
+    server->on("/api/sensors/graph", HTTP_GET, std::bind(&APIEndpoints::handleGetGraphData, this, std::placeholders::_1));
+    server->on("/api/sensors/test", HTTP_POST, std::bind(&APIEndpoints::handleTestSensor, this, std::placeholders::_1));
+    server->on("/api/sensors/reset", HTTP_POST, std::bind(&APIEndpoints::handleResetSensor, this, std::placeholders::_1));
+    
+    // Relay endpoints
+    server->on("/api/relays/status", HTTP_GET, std::bind(&APIEndpoints::handleGetRelayStatus, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/relays/set", 
+        std::bind(&APIEndpoints::handleSetRelayState, this, std::placeholders::_1, std::placeholders::_2)));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/relays/operating-time", 
+        std::bind(&APIEndpoints::handleSetRelayOperatingTime, this, std::placeholders::_1, std::placeholders::_2)));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/relays/cycle-config", 
+        std::bind(&APIEndpoints::handleSetCycleConfig, this, std::placeholders::_1, std::placeholders::_2)));
+    
+    // Settings endpoints
+    server->on("/api/settings", HTTP_GET, std::bind(&APIEndpoints::handleGetSettings, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/settings/update", 
+        std::bind(&APIEndpoints::handleUpdateSettings, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/environment/thresholds", HTTP_GET, std::bind(&APIEndpoints::handleGetEnvironmentalThresholds, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/environment/update", 
+        std::bind(&APIEndpoints::handleUpdateEnvironmentalThresholds, this, std::placeholders::_1, std::placeholders::_2)));
+    
+    // Network endpoints
+    server->on("/api/network/config", HTTP_GET, std::bind(&APIEndpoints::handleGetNetworkConfig, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/network/update", 
+        std::bind(&APIEndpoints::handleUpdateNetworkConfig, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/wifi/scan", HTTP_GET, std::bind(&APIEndpoints::handleWiFiScan, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/wifi/test", 
+        std::bind(&APIEndpoints::handleTestWiFi, this, std::placeholders::_1, std::placeholders::_2)));
+    
+    // System endpoints
+    server->on("/api/system/info", HTTP_GET, std::bind(&APIEndpoints::handleGetSystemInfo, this, std::placeholders::_1));
+    server->on("/api/system/files", HTTP_GET, std::bind(&APIEndpoints::handleGetFilesList, this, std::placeholders::_1));
+    server->on("/api/system/delete", HTTP_DELETE, std::bind(&APIEndpoints::handleFileDelete, this, std::placeholders::_1));
+    server->on("/api/system/reboot", HTTP_POST, std::bind(&APIEndpoints::handleReboot, this, std::placeholders::_1));
+    server->on("/api/system/factory-reset", HTTP_POST, std::bind(&APIEndpoints::handleFactoryReset, this, std::placeholders::_1));
+    
+    // File upload handler
+    server->on("/api/upload", HTTP_POST, 
+        [](AsyncWebServerRequest* request) { request->send(200); },
+        std::bind(&APIEndpoints::handleFileUpload, this, std::placeholders::_1, std::placeholders::_2, 
+                  std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+    
+    // Profile endpoints
+    server->on("/api/profiles", HTTP_GET, std::bind(&APIEndpoints::handleGetProfiles, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/profiles/save", 
+        std::bind(&APIEndpoints::handleSaveProfile, this, std::placeholders::_1, std::placeholders::_2)));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/profiles/load", 
+        std::bind(&APIEndpoints::handleLoadProfile, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/profiles/export", HTTP_GET, std::bind(&APIEndpoints::handleExportProfiles, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/profiles/import", 
+        std::bind(&APIEndpoints::handleImportProfiles, this, std::placeholders::_1, std::placeholders::_2)));
+    
+    // OTA update endpoints
+    server->on("/api/ota/status", HTTP_GET, std::bind(&APIEndpoints::handleOTAStatus, this, std::placeholders::_1));
+    server->on("/api/ota/update", HTTP_POST, std::bind(&APIEndpoints::handleOTAUpdate, this, std::placeholders::_1));
+    
+    // Maintenance endpoints
+    server->on("/api/maintenance/diagnostics", HTTP_GET, std::bind(&APIEndpoints::handleRunDiagnostics, this, std::placeholders::_1));
+    server->on("/api/maintenance/health", HTTP_GET, std::bind(&APIEndpoints::handleGetSystemHealth, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/maintenance/reboot-schedule", 
+        std::bind(&APIEndpoints::handleSetRebootSchedule, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/maintenance/reboot-schedule", HTTP_GET, std::bind(&APIEndpoints::handleGetRebootSchedule, this, std::placeholders::_1));
+    
+    // Power management endpoints
+    server->on("/api/power/mode", HTTP_GET, std::bind(&APIEndpoints::handleGetPowerMode, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/power/mode", 
+        std::bind(&APIEndpoints::handleSetPowerMode, this, std::placeholders::_1, std::placeholders::_2)));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/power/schedule", 
+        std::bind(&APIEndpoints::handleSetPowerSchedule, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/power/schedule", HTTP_GET, std::bind(&APIEndpoints::handleGetPowerSchedule, this, std::placeholders::_1));
+    
+    // Notification endpoints
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/notifications/send", 
+        std::bind(&APIEndpoints::handleSendNotification, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/notifications/recent", HTTP_GET, std::bind(&APIEndpoints::handleGetRecentNotifications, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/notifications/configure", 
+        std::bind(&APIEndpoints::handleConfigureNotifications, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/notifications/test", HTTP_POST, std::bind(&APIEndpoints::handleTestNotificationChannel, this, std::placeholders::_1));
+    
+    // Tapo device endpoints
+    server->on("/api/tapo/devices", HTTP_GET, std::bind(&APIEndpoints::handleGetTapoDevices, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/tapo/add", 
+        std::bind(&APIEndpoints::handleAddTapoDevice, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/tapo/remove", HTTP_DELETE, std::bind(&APIEndpoints::handleRemoveTapoDevice, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/tapo/control", 
+        std::bind(&APIEndpoints::handleControlTapoDevice, this, std::placeholders::_1, std::placeholders::_2)));
+    
+    // Logging endpoints
+    server->on("/api/logs", HTTP_GET, std::bind(&APIEndpoints::handleGetLogs, this, std::placeholders::_1));
+    server->addHandler(new AsyncCallbackJsonWebHandler("/api/logs/level", 
+        std::bind(&APIEndpoints::handleSetLogLevel, this, std::placeholders::_1, std::placeholders::_2)));
+    server->on("/api/logs/clear", HTTP_POST, std::bind(&APIEndpoints::handleClearLogs, this, std::placeholders::_1));
+}
  
  bool APIEndpoints::authenticate(AsyncWebServerRequest* request) {
      return _webServer->authenticate(request);

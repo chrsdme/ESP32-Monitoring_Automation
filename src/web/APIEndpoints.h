@@ -7,7 +7,8 @@
  #define API_ENDPOINTS_H
  
  #include <Arduino.h>
- #include <ESPAsyncWebServer.h>
+ // Use our wrapper instead of direct inclusion
+ #include "AsyncWebServerWrapper.h"
  #include <AsyncJson.h>
  #include <ArduinoJson.h>
  
