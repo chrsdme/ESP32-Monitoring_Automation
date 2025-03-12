@@ -1,0 +1,25 @@
+{
+    "wifi": {
+      "hostname": "mushroom",
+      "ip_config": {
+        "dhcp": true,
+        "ip": "",
+        "gateway": "",
+        "subnet": "",
+        "dns1": "",
+        "dns2": ""
+      },
+      "watchdog": {
+        "min_rssi": -80,
+        "check_interval": 30
+      }
+    },
+    "mqtt": {
+      "enabled": false,
+      "broker": "192.168.1.100",
+      "port": 1883,
+      "topic": "mushroom/tent",
+      "username": "",
+      "password": ""
+    }
+  }

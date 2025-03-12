@@ -1,0 +1,165 @@
+{
+    "system": {
+      "hostname": "mushroom",
+      "http_auth": {
+        "username": "admin",
+        "password": "admin"
+      },
+      "logging": {
+        "level": 0,
+        "max_size": 50,
+        "flush_interval": 60,
+        "log_server": "",
+        "sensor_error_count": 5
+      },
+      "reboot_scheduler": {
+        "enabled": false,
+        "day_of_week": 0,
+        "hour": 3,
+        "minute": 0
+      },
+      "sleep_mode": {
+        "mode": 0,
+        "from": "00:00",
+        "to": "06:00"
+      }
+    },
+    "network": {
+      "wifi": {
+        "hostname": "mushroom",
+        "ip_config": {
+          "dhcp": true,
+          "ip": "",
+          "gateway": "",
+          "subnet": "",
+          "dns1": "",
+          "dns2": ""
+        },
+        "watchdog": {
+          "min_rssi": -80,
+          "check_interval": 30
+        }
+      },
+      "mqtt": {
+        "enabled": false,
+        "broker": "192.168.1.100",
+        "port": 1883,
+        "topic": "mushroom/tent",
+        "username": "",
+        "password": ""
+      }
+    },
+    "hardware": {
+      "sensors": {
+        "upper_dht_pin": 13,
+        "lower_dht_pin": 14,
+        "scd_sda_pin": 21,
+        "scd_scl_pin": 22,
+        "dht_interval": 5,
+        "scd_interval": 10,
+        "graph_interval": 30,
+        "graph_points": 100
+      },
+      "relays": [
+        {
+          "id": 1,
+          "name": "Main PSU",
+          "pin": 16,
+          "visible": false,
+          "has_dependency": false,
+          "depends_on_relay": 0
+        },
+        {
+          "id": 2,
+          "name": "UV Light",
+          "pin": 17,
+          "visible": true,
+          "has_dependency": true,
+          "depends_on_relay": 1
+        },
+        {
+          "id": 3,
+          "name": "Grow Light",
+          "pin": 19,
+          "visible": true,
+          "has_dependency": false,
+          "depends_on_relay": 0
+        },
+        {
+          "id": 4,
+          "name": "Tub Fans",
+          "pin": 26,
+          "visible": true,
+          "has_dependency": true,
+          "depends_on_relay": 1
+        },
+        {
+          "id": 5,
+          "name": "Humidifiers",
+          "pin": 33,
+          "visible": true,
+          "has_dependency": true,
+          "depends_on_relay": 1
+        },
+        {
+          "id": 6,
+          "name": "Heater",
+          "pin": 23,
+          "visible": true,
+          "has_dependency": false,
+          "depends_on_relay": 0
+        },
+        {
+          "id": 7,
+          "name": "IN/OUT Fans",
+          "pin": 25,
+          "visible": true,
+          "has_dependency": true,
+          "depends_on_relay": 1
+        },
+        {
+          "id": 8,
+          "name": "Reserved",
+          "pin": 35,
+          "visible": false,
+          "has_dependency": false,
+          "depends_on_relay": 0
+        }
+      ]
+    },
+    "environment": {
+      "humidity_low": 50.0,
+      "humidity_high": 85.0,
+      "temperature_low": 20.0,
+      "temperature_high": 24.0,
+      "co2_low": 1000.0,
+      "co2_high": 1600.0
+    },
+    "timing": {
+      "cycle": {
+        "on_duration": 5,
+        "interval": 60
+      },
+      "override_duration": 5
+    },
+    "tapo": {
+      "username": "",
+      "devices": [
+        {
+          "ip": "",
+          "alias": "Main PSU",
+          "relay": 1
+        },
+        {
+          "ip": "",
+          "alias": "Heater",
+          "relay": 6
+        },
+        {
+          "ip": "",
+          "alias": "",
+          "relay": 0
+        }
+      ]
+    }
+  }

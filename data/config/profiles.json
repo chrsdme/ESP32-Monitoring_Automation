@@ -1,0 +1,269 @@
+{
+    "profiles": {
+      "Default": {
+        "name": "Default",
+        "environment": {
+          "humidity_low": 50.0,
+          "humidity_high": 85.0,
+          "temperature_low": 20.0,
+          "temperature_high": 24.0,
+          "co2_low": 1000.0,
+          "co2_high": 1600.0
+        },
+        "cycle": {
+          "on_duration": 5,
+          "interval": 60
+        },
+        "override_duration": 5,
+        "relay_times": {
+          "relay1": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay2": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay3": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay4": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay5": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay6": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay7": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay8": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          }
+        }
+      },
+      "Test": {
+        "name": "Test",
+        "environment": {
+          "humidity_low": 40.0,
+          "humidity_high": 80.0,
+          "temperature_low": 18.0,
+          "temperature_high": 24.0,
+          "co2_low": 800.0,
+          "co2_high": 1400.0
+        },
+        "cycle": {
+          "on_duration": 5,
+          "interval": 15
+        },
+        "override_duration": 5,
+        "relay_times": {
+          "relay1": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay2": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay3": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay4": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay5": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay6": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay7": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          },
+          "relay8": {
+            "start_hour": 8,
+            "start_minute": 0,
+            "end_hour": 20,
+            "end_minute": 0
+          }
+        }
+      },
+      "Colonization": {
+        "name": "Colonization",
+        "environment": {
+          "humidity_low": 70.0,
+          "humidity_high": 90.0,
+          "temperature_low": 21.0,
+          "temperature_high": 24.0,
+          "co2_low": 1000.0,
+          "co2_high": 2000.0
+        },
+        "cycle": {
+          "on_duration": 2,
+          "interval": 120
+        },
+        "override_duration": 5,
+        "relay_times": {
+          "relay1": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay2": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 0,
+            "end_minute": 0
+          },
+          "relay3": {
+            "start_hour": 6,
+            "start_minute": 0,
+            "end_hour": 18,
+            "end_minute": 0
+          },
+          "relay4": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay5": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay6": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay7": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay8": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          }
+        }
+      },
+      "Fruiting": {
+        "name": "Fruiting",
+        "environment": {
+          "humidity_low": 80.0,
+          "humidity_high": 95.0,
+          "temperature_low": 18.0,
+          "temperature_high": 22.0,
+          "co2_low": 600.0,
+          "co2_high": 1000.0
+        },
+        "cycle": {
+          "on_duration": 10,
+          "interval": 30
+        },
+        "override_duration": 5,
+        "relay_times": {
+          "relay1": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay2": {
+            "start_hour": 10,
+            "start_minute": 0,
+            "end_hour": 14,
+            "end_minute": 0
+          },
+          "relay3": {
+            "start_hour": 6,
+            "start_minute": 0,
+            "end_hour": 18,
+            "end_minute": 0
+          },
+          "relay4": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay5": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay6": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay7": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          },
+          "relay8": {
+            "start_hour": 0,
+            "start_minute": 0,
+            "end_hour": 23,
+            "end_minute": 59
+          }
+        }
+      }
+    },
+    "current_profile": "Default"
+  }
