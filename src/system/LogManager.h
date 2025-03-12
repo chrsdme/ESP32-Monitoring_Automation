@@ -48,7 +48,9 @@
       * @param module Module name
       * @param message Log message
       */
-     void log(LogLevel level, const String& module, const String& message);
+     void log(LogLevel level, const String& module, const String& message); 
+     
+     void log(LogLevel level, const String& message);
      
      /**
       * @brief Set the log level

@@ -506,35 +506,41 @@
  
  // Helper function to URL-encode a string
  String NotificationManager::urlEncode(const String& text) {
-     String encoded = "";
-     char c;
-     char code0;
-     char code1;
-     
-     for (unsigned int i = 0; i < text.length(); i++) {
-         c = text.charAt(i);
-         if (c == ' ') {
-             encoded += '+';
-         } else if (isalnum(c)) {
-             encoded += c;
-         } else {
-             code1 = (c & 0xf) + '0';
-             if ((c & 0xf) > 9) {
-                 code1 = (c & 0xf) - 10 + 'A';
-             }
-             c = (c >> 4) & 0xf;
-             code0 = c + '0';
-             if (c > 9) {
-                 code0 = c - 10 + 'A';
-             }
-             encoded += '%';
-             encoded += code0;
-             encoded += code1;
-         }
-     }
-     
-     return encoded;
- }
+    String encoded = "";
+    char c;
+    char code0;
+    char code1;
+    
+    for (int i = 0; i < text.length(); i++) {
+        c = text.charAt(i);
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded += c;
+        } 
+        // Space should be encoded as '+'
+        else if (c == ' ') {
+            encoded += '+';
+        } 
+        // Any other characters are percent-encoded
+        else {
+            code1 = (c & 0xf) + '0';
+            if ((c & 0xf) > 9) {
+                code1 = (c & 0xf) - 10 + 'A';
+            }
+            c = (c >> 4) & 0xf;
+            code0 = c + '0';
+            if (c > 9) {
+                code0 = c - 10 + 'A';
+            }
+            encoded += '%';
+            encoded += code0;
+            encoded += code1;
+        }
+    }
+    
+    return encoded;
+}
+
  
  void NotificationManager::notificationTask(void* parameter) {
      NotificationManager* notificationManager = static_cast<NotificationManager*>(parameter);

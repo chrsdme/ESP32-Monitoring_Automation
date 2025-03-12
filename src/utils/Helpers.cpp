@@ -123,3 +123,4 @@
      
      return result;
  }
+ } // End of namespace Helpers

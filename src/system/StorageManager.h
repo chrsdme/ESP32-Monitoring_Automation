@@ -12,6 +12,7 @@
  #include <nvs_flash.h>
  #include <esp_partition.h>
  #include <ArduinoJson.h>
+ #include <vector>
  #include <freertos/FreeRTOS.h>
  #include <freertos/semphr.h>
  #include "../utils/Constants.h"

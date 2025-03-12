@@ -22,7 +22,7 @@
  }
  
  void APIEndpoints::registerEndpoints() {
-     AsyncWebServer* server = _webServer->getServer();
+    AsyncWebServer* server = _webServer->getAsyncWebServer();
      
      // Sensor endpoints
      server->on("/api/sensors/data", HTTP_GET, std::bind(&APIEndpoints::handleGetSensorData, this, std::placeholders::_1));

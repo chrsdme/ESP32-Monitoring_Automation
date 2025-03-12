@@ -52,6 +52,8 @@
       * @return True if port set successfully
       */
      bool setPort(uint16_t port);
+
+     
      
      /**
       * @brief Get web server port
@@ -65,7 +67,10 @@
       * @param password Password
       * @return True if credentials set successfully
       */
-     bool setHttpAuth(const String& username, const String& password);
+      bool authenticate(AsyncWebServerRequest* request);
+      bool setHttpAuth(const String& username, const String& password);
+
+     AsyncWebServer* getAsyncWebServer() { return _server; }
      
      /**
       * @brief Get HTTP authentication credentials
@@ -102,7 +107,7 @@
      void setupNormalModeRoutes();
      void setupCommonRoutes();
      
-     bool authenticate(AsyncWebServerRequest* request);
+     
      void handleWiFiScan(AsyncWebServerRequest* request);
      void handleTestWiFi(AsyncWebServerRequest* request, JsonVariant& json);
      void handleSaveSettings(AsyncWebServerRequest* request, JsonVariant& json);
@@ -137,3 +142,4 @@
  };
  
  #endif // WEB_SERVER_H
+ 

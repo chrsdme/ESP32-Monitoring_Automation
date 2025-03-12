@@ -1036,7 +1036,7 @@
          getAppCore()->getLogManager()->log(LogLevel::WARN, "WebServer", 
              "Default config file not found: " + String(Constants::DEFAULT_CONFIG_FILE));
      }
- }json", "{\"success\":false,\"message\":\"Missing relay_id or state\"}");
+     request->send(400, "application/json", "{\"success\":false,\"message\":\"Missing relay_id or state\"}");
          return;
      }
      
@@ -1461,7 +1461,7 @@
          !jsonObj.containsKey("temperature_low") || !jsonObj.containsKey("temperature_high") || 
          !jsonObj.containsKey("co2_low") || !jsonObj.containsKey("co2_high")) {
          
-         request->send(400, "application//**
+            request->send(400, "application/json", "{\"error\":\"Bad Request\"}");
   * @file WebServer.cpp
   * @brief Implementation of the WebServer class
   */

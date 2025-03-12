@@ -193,6 +193,10 @@
      TaskHandle_t _notificationTaskHandle;
      QueueHandle_t _notificationQueue;
      
+
+     //url encode
+     String urlEncode(const String& text);
+     
      // Helper methods
      bool sendEmail(const NotificationMessage& notification);
      bool sendTelegram(const NotificationMessage& notification);

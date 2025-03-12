@@ -83,7 +83,7 @@ SSLCert* SecureWebServer::generateSelfSignedCertificate() {
     // Generate a self-signed certificate
     int createCertResult = createSelfSignedCert(
         *cert,
-        EMBER_CERT_KEY_TYPE_RSA,  // Key type
+        0                           // RSA key type
         2048,                     // Key length
         "CN=MushroomTentController,O=HomeAutomation,C=US",  // Subject
         365                       // Validity days
@@ -188,7 +188,7 @@ void SecureWebServer::setupNormalModeRoutes() {
 
 bool SecureWebServer::authenticate(HTTPRequest* request, HTTPResponse* response) {
     // Basic authentication implementation
-    String authHeader = request->getHeaderValue("Authorization");
+    String authHeader = request->getHeader("Authorization");
     
     if (authHeader.isEmpty()) {
         response->setStatusCode(401);
@@ -200,7 +200,7 @@ bool SecureWebServer::authenticate(HTTPRequest* request, HTTPResponse* response)
     // Basic auth parsing (base64 encoded)
     if (authHeader.startsWith("Basic ")) {
         // Note: In a real-world scenario, use a more secure base64 decoding method
-        String credentials = base64::decode(authHeader.substring(6));
+        String credentials = decodeBase64(authHeader.substring(6));
         int colonIndex = credentials.indexOf(':');
         
         if (colonIndex > 0) {
@@ -256,7 +256,7 @@ void SecureWebServer::handleTestWiFi(HTTPRequest* request, HTTPResponse* respons
     std::string body;
     char buffer[512];
     size_t bytesRead;
-    while ((bytesRead = request->readBytes(buffer, 512)) > 0) {
+    while ((bytesRead = request->readBytes(reinterpret_cast<byte*>(buffer), 512)) > 0) {
         body.append(buffer, bytesRead);
     }
 
@@ -417,3 +417,73 @@ void SecureWebServer::createTasks() {
 }
 
 // Add more methods as needed for full functionality
+
+// Initialize static instance
+SecureWebServer* SecureWebServer::_instance = nullptr;
+
+// Implement static handlers:
+void SecureWebServer::handleRootStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response) {
+    if (_instance) {
+        _instance->handleRoot(request, response);
+    }
+}
+
+void SecureWebServer::handleLoginStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response) {
+    if (_instance) {
+        _instance->handleLogin(request, response);
+    }
+}
+
+void SecureWebServer::handleSetupStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response) {
+    if (_instance) {
+        _instance->handleSetup(request, response);
+    }
+}
+
+void SecureWebServer::handleDashboardStatic(httpsserver::HTTPRequest* request, httpsserver::HTTPResponse* response) {
+    if (_instance) {
+        _instance->handleDashboard(request, response);
+    }
+
+    String SecureWebServer::decodeBase64(const String& input) {
+        const char* ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        int paddingChars = 0;
+        int i = input.length() - 1;
+        
+        while (input.charAt(i) == '=') {
+            paddingChars++;
+            i--;
+        }
+        
+        size_t length = (input.length() * 3) / 4 - paddingChars;
+        String output;
+        output.reserve(length);
+        
+        uint32_t temp = 0;
+        int charCount = 0;
+        int bits = 0;
+        
+        for (i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == '=') {
+                break;
+            }
+            
+            // Find position in Base64 alphabet
+            const char* pos = strchr(ALPHABET, c);
+            if (pos == nullptr) {
+                continue; // Skip invalid character
+            }
+            
+            temp = (temp << 6) | (pos - ALPHABET);
+            bits += 6;
+            
+            if (bits >= 8) {
+                bits -= 8;
+                output += char((temp >> bits) & 0xFF);
+            }
+        }
+        
+        return output;
+    }
+}
