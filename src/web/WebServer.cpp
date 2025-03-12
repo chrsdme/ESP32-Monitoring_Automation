@@ -693,8 +693,12 @@ void WebServer::handleSetRelayState(AsyncWebServerRequest* request, JsonVariant&
     bool success = getAppCore()->getRelayManager()->setRelayState(relayId, state);
     
     // Return result
+    String message = success ? 
+        "Relay " + String(relayId) + " state updated to " + String(stateValue) : 
+        "Failed to update relay state";
+    
     String response = "{\"success\":" + String(success ? "true" : "false") + 
-                      ",\"message\":\"" + (success ? "Relay state updated" : "Failed to update relay state") + "\"}";
+                      ",\"message\":\"" + message + "\"}";
     
     request->send(200, "application/json", response);
 }

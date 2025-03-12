@@ -331,74 +331,67 @@
  }
  
  bool ProfileManager::importProfilesJson(const JsonVariant& json) {
-     if (!json.is<JsonObject>() || !json.as<JsonObject>().containsKey("profiles")) {
-         return false;
-     }
-     
-     // Take mutex to ensure thread safety
-     if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-         // Get profiles object
-         JsonObject profilesObj = json.as<JsonObject>()["profiles"].as<JsonObject>();
-         
-         // Clear existing profiles
-         _profiles.clear();
-         
-         // Import profiles
-         for (JsonPair kv : profilesObj) {
-             String name = kv.key().c_str();
-             JsonObject settings = kv.value().as<JsonObject>();
-             
-             
-             ProfileEntry entry(name);
-             JsonObject profileData = entry.doc.to<JsonObject>();
-             
-             // Copy settings to profile document
-             for (JsonPair settingKv : settings) {
-                 profileData[settingKv.key()] = settingKv.value();
-             }
-             
-             _profiles.push_back(entry);
-         }
-         
-         if (doc.containsKey("current_profile")) {
-            String name = doc["current_profile"].as<String>();
+    if (!json.is<JsonObject>() || !json.as<JsonObject>().containsKey("profiles")) {
+        return false;
+    }
+    
+    // Take mutex to ensure thread safety
+    if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+        // Get profiles object
+        JsonObject profilesObj = json.as<JsonObject>()["profiles"].as<JsonObject>();
+        
+        // Clear existing profiles
+        _profiles.clear();
+        
+        // Import profiles
+        for (JsonPair kv : profilesObj) {
+            String name = kv.key().c_str();
+            JsonObject settings = kv.value().as<JsonObject>();
+            
+            DynamicJsonDocument profile(8192);
+            JsonObject profileObj = profile.to<JsonObject>();
+            profileObj.set(settings);
+            
+            _profiles[name] = profile;
+        }
+        
+        // Get current profile
+        if (json.as<JsonObject>().containsKey("current_profile")) {
+            String currentProfile = json.as<JsonObject>()["current_profile"].as<String>();
             
             // Check if the profile exists
-            int idx = findProfileIndex(name);
-            if (idx >= 0) {
-                _currentProfile = name;
+            auto it = _profiles.find(currentProfile);
+            if (it != _profiles.end()) {
+                _currentProfile = currentProfile;
             } else if (!_profiles.empty()) {
-                _currentProfile = _profiles[0].name;
+                _currentProfile = _profiles.begin()->first;
             }
         } else if (!_profiles.empty()) {
-            _currentProfile = _profiles[0].name;
+            _currentProfile = _profiles.begin()->first;
         }
-         
-         // Save changes and load current profile
-         bool success = saveProfilesToFile();
-         if (success && !_currentProfile.isEmpty()) {
-             idx = findProfileIndex(_currentProfile);
-             if (idx >= 0) {
-                 applyProfileSettings(_profiles[idx].doc);
-             }
-         }
-         
-         // Release mutex
-         xSemaphoreGive(_profileMutex);
-         
-         if (success) {
-             getAppCore()->getLogManager()->log(LogLevel::INFO, "Profiles", 
-                 "Profiles imported successfully");
-         } else {
-             getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
-                 "Failed to import profiles");
-         }
-         
-         return success;
-     }
-     
-     return false;
- }
+        
+        // Save changes and load current profile
+        bool success = saveProfilesToFile();
+        if (success && !_currentProfile.isEmpty()) {
+            applyProfileSettings(_profiles[_currentProfile]);
+        }
+        
+        // Release mutex
+        xSemaphoreGive(_profileMutex);
+        
+        if (success) {
+            getAppCore()->getLogManager()->log(LogLevel::INFO, "Profiles", 
+                "Profiles imported successfully");
+        } else {
+            getAppCore()->getLogManager()->log(LogLevel::ERROR, "Profiles", 
+                "Failed to import profiles");
+        }
+        
+        return success;
+    }
+    
+    return false;
+}
  
  bool ProfileManager::createDefaultProfiles() {
      // Take mutex to ensure thread safety
