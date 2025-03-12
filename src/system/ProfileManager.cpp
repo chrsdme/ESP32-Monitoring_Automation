@@ -126,9 +126,12 @@
          JsonObject profilesObj = doc.createNestedObject("profiles");
          
          for (const auto& entry : _profiles) {
-             JsonObject profileObj = profilesObj.createNestedObject(entry.name);
-             profileObj.set(entry.doc.as<JsonObject>());
-         }
+            JsonObject profileObj = profilesObj.createNestedObject(entry.name);
+            if (entry.doc.is<JsonObject>()) {
+                JsonObject docObj = entry.doc;
+                profileObj.set(docObj);
+            }
+        }
          
          doc["current_profile"] = _currentProfile;
          
@@ -593,9 +596,13 @@ if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
      JsonObject profilesObj = doc.createNestedObject("profiles");
      
      for (const auto& entry : _profiles) {
-         JsonObject profileObj = profilesObj.createNestedObject(entry.name);
-         profileObj.set(entry.doc.as<JsonObject>());
-     }
+        JsonObject profileObj = profilesObj.createNestedObject(entry.name);
+        if (entry.doc.is<JsonObject>()) {
+            JsonObject docObj = entry.doc;
+            profileObj.set(docObj);
+        }
+    }
+
      
      doc["current_profile"] = _currentProfile;
      
