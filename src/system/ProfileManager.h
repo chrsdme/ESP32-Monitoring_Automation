@@ -11,7 +11,6 @@
  #include <SPIFFS.h>
  #include <freertos/FreeRTOS.h>
  #include <freertos/semphr.h>
- #include <map>
  #include <vector>
  #include "../utils/Constants.h"
  
@@ -24,6 +23,16 @@
   */
  class ProfileManager {
  public:
+     // Structure to represent a profile
+     struct ProfileEntry {
+         String name;
+         DynamicJsonDocument doc;  // Each profile has its own JSON document
+         
+         // Constructor with mandatory size parameter
+         ProfileEntry(const String& name, size_t capacity = 8192) 
+             : name(name), doc(capacity) {}
+     };
+ 
      ProfileManager();
      ~ProfileManager();
      
@@ -108,15 +117,7 @@
      bool createDefaultProfiles();
      
  private:
-     // Profile data structure using a simple approach
-     struct ProfileEntry {
-         String name;
-         DynamicJsonDocument doc;
-         
-         // Constructor to prevent default constructor issues
-         ProfileEntry(const String& n) : name(n), doc(8192) {}
-     };
-     
+     // Profile data
      std::vector<ProfileEntry> _profiles;
      String _currentProfile;
      
@@ -131,15 +132,8 @@
      bool saveProfilesToFile();
      void applyProfileSettings(const DynamicJsonDocument& profileSettings);
      
-     // Helper method to find a profile by name
-     int findProfileIndex(const String& name) {
-         for (size_t i = 0; i < _profiles.size(); i++) {
-             if (_profiles[i].name == name) {
-                 return i;
-             }
-         }
-         return -1;
-     }
+     // Helper methods
+     int findProfileIndex(const String& name);
  };
  
  #endif // PROFILE_MANAGER_H

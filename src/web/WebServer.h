@@ -7,7 +7,8 @@
  #define WEB_SERVER_H
  
  #include <Arduino.h>
- // Use our wrapper instead of direct inclusion
+ #include <functional>
+ #include "ESPAsyncWebServerFix.h" 
  #include "AsyncWebServerWrapper.h"
  #include <AsyncJson.h>
  #include <ArduinoJson.h>
