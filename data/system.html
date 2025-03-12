@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System - Mushroom Tent Controller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header with navigation -->
+    <header class="header">
+        <div class="container header-container">
+            <h1 class="logo">Mushroom Tent Controller</h1>
+            <div class="d-flex align-items-center">
+                <button id="lightDarkToggle" class="theme-toggle" title="Toggle light/dark mode">
+                    <i class="fas fa-lightbulb"></i>
+                </button>
+                <nav>
+                    <ul class="nav">
+                        <li class="nav-item">
+                            <a href="index.html" class="nav-link">Dashboard</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="container mt-3">
+        <!-- Status alerts -->
+        <div id="alertContainer" class="mb-3" style="display: none;"></div>
+
+        <!-- First row - System Info and OTA -->
+        <div class="row mb-3">
+            <!-- System Information -->
+            <div class="col-half">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">System Information</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>IP Address:</strong> <span id="ipAddress">--</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>WiFi SSID:</strong> <span id="wifiSsid">--</span>
+                            <br>
+                            <strong>WiFi Signal:</strong> <span id="wifiRssi">--</span> dBm
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h2 class="card-title">FS, NVS & HEAP</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- HEAP Usage -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>HEAP:</strong>
+                                <span id="heapUsage">-- KB used / -- KB Free / Total: -- KB</span>
+                            </div>
+                            <div class="progress mt-1">
+                                <div id="heapProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- FS Usage -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>FS:</strong>
+                                <span id="fsUsage">-- KB used / -- KB Free / Total: -- KB</span>
+                            </div>
+                            <div class="progress mt-1">
+                                <div id="fsProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- NVS Usage -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>NVS:</strong>
+                                <span id="nvsUsage">-- Used / -- Free / -- total entries</span>
+                            </div>
+                            <div class="progress mt-1">
+                                <div id="nvsProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OTA Update -->
+            <div class="col-half">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">OTA Update</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Current FS Version:</strong> <span id="fsVersion">--</span>
+                            <br>
+                            <strong>Current Firmware Version:</strong> <span id="fwVersion">--</span>
+                        </div>
+
+                        <form id="otaForm">
+                            <div class="form-group">
+                                <label class="form-label" for="fsFileInput">Select FS File (.bin):</label>
+                                <div class="d-flex">
+                                    <input type="file" id="fsFileInput" class="form-control" accept=".bin">
+                                    <button type="button" class="btn btn-primary ml-2" id="uploadFsBtn">Upload FS</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="fwFileInput">Select OTA File (.bin):</label>
+                                <div class="d-flex">
+                                    <input type="file" id="fwFileInput" class="form-control" accept=".bin">
+                                    <button type="button" class="btn btn-primary ml-2" id="uploadFwBtn">Upload FW</button>
+                                </div>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="rebootAfterUpdate" checked>
+                                <label class="form-check-label" for="rebootAfterUpdate">Reboot after update</label>
+                            </div>
+
+                            <button type="button" class="btn btn-success btn-block" id="updateBothBtn">Update OTA (Both)</button>
+
+                            <div class="progress mt-3" style="display: none;" id="otaProgressContainer">
+                                <div id="otaProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+
+                            <div id="otaStatus" class="mt-2"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second row - Logs -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2 class="card-title">System Logs</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <textarea id="logBox" class="form-control" rows="10" readonly></textarea>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" id="clearLogsBtn">Clear</button>
+                    <div>
+                        <button type="button" class="btn btn-info" id="pauseLogsBtn">Pause</button>
+                        <button type="button" class="btn btn-info ml-2" id="downloadLogsBtn">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Third row - File System -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">File System</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3>Files</h3>
+                        <button type="button" class="btn btn-info btn-sm" id="refreshFilesBtn">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="fileListContainer">
+                        <!-- File list will be populated via JavaScript -->
+                        <p>Loading files...</p>
+                    </div>
+                </div>
+
+                <!-- File Upload -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Upload File</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="fileUploadForm">
+                            <div class="form-group">
+                                <label class="form-label" for="fileToUpload">Select File:</label>
+                                <input type="file" id="fileToUpload" class="form-control">
+                            </div>
+                            <button type="button" class="btn btn-primary" id="uploadFileBtn">Upload</button>
+                        </form>
+                        <div class="progress mt-3" style="display: none;" id="uploadProgressContainer">
+                            <div id="uploadProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div id="uploadStatus" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- File Content Modal -->
+    <div id="fileContentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="fileContentTitle">File Content</h2>
+                <button class="modal-close" id="closeFileContentModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="fileContentContainer">
+                    <pre id="fileContent"></pre>
+                </div>
+                <div id="fileImageContainer" style="display: none;">
+                    <img id="fileImage" src="" alt="File Content" style="max-width: 100%;">
+                </div>
+                <div id="fileBinaryContainer" style="display: none;">
+                    <p>This file contains binary content that cannot be displayed.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeFileContentBtn">Close</button>
+                <a href="#" id="downloadFileBtn" class="btn btn-info" download>Download</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Delete</h2>
+                <button class="modal-close" id="closeDeleteConfirmModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the file <strong id="fileToDelete"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/system.js"></script>
+</body>
+</html>

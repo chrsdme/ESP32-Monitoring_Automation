@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initial Setup - Mushroom Tent Controller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .setup-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .setup-step {
+            display: none;
+        }
+        
+        .setup-step.active {
+            display: block;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+        
+        .step.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .step.completed {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .step-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .setup-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-container">
+            <h1 class="logo">Mushroom Tent Controller - Initial Setup</h1>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="setup-container mt-3">
+        <!-- Status alerts -->
+        <div id="alertContainer" class="mb-3" style="display: none;"></div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step-indicator-1">1</div>
+            <div class="step" id="step-indicator-2">2</div>
+            <div class="step" id="step-indicator-3">3</div>
+            <div class="step" id="step-indicator-4">4</div>
+            <div class="step" id="step-indicator-5">5</div>
+            <div class="step" id="step-indicator-6">6</div>
+        </div>
+
+        <!-- Setup Form -->
+        <form id="setupForm">
+            <!-- Step 1: WiFi Configuration -->
+            <div class="setup-step active" id="step-1">
+                <h2 class="step-title">WiFi Configuration</h2>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Primary WiFi Network</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="wifi1Ssid">SSID</label>
+                                    <input type="text" class="form-control" id="wifi1Ssid" required>
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="wifi1Password">Password</label>
+                                    <input type="password" class="form-control" id="wifi1Password" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-info" id="scanWifi1Btn">
+                            <i class="fas fa-wifi"></i> Scan Networks
+                        </button>
+                        <button type="button" class="btn btn-success ml-2" id="testWifi1Btn">
+                            <i class="fas fa-check-circle"></i> Test Connection
+                        </button>
+                        <div id="wifiTestResult1" class="mt-2"></div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Backup WiFi Networks (Optional)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h4 class="card-title">Secondary WiFi Network</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-half">
+                                        <div class="form-group">
+                                            <label class="form-label" for="wifi2Ssid">SSID</label>
+                                            <input type="text" class="form-control" id="wifi2Ssid">
+                                        </div>
+                                    </div>
+                                    <div class="col-half">
+                                        <div class="form-group">
+                                            <label class="form-label" for="wifi2Password">Password</label>
+                                            <input type="password" class="form-control" id="wifi2Password">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-info" id="scanWifi2Btn">
+                                    <i class="fas fa-wifi"></i> Scan Networks
+                                </button>
+                                <button type="button" class="btn btn-success ml-2" id="testWifi2Btn">
+                                    <i class="fas fa-check-circle"></i> Test Connection
+                                </button>
+                                <div id="wifiTestResult2" class="mt-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h4 class="card-title">Tertiary WiFi Network</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-half">
+                                        <div class="form-group">
+                                            <label class="form-label" for="wifi3Ssid">SSID</label>
+                                            <input type="text" class="form-control" id="wifi3Ssid">
+                                        </div>
+                                    </div>
+                                    <div class="col-half">
+                                        <div class="form-group">
+                                            <label class="form-label" for="wifi3Password">Password</label>
+                                            <input type="password" class="form-control" id="wifi3Password">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-info" id="scanWifi3Btn">
+                                    <i class="fas fa-wifi"></i> Scan Networks
+                                </button>
+                                <button type="button" class="btn btn-success ml-2" id="testWifi3Btn">
+                                    <i class="fas fa-check-circle"></i> Test Connection
+                                </button>
+                                <div id="wifiTestResult3" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="hostname">Device Hostname</label>
+                    <input type="text" class="form-control" id="hostname" placeholder="mushroom" value="mushroom" required>
+                    <small class="form-text text-muted">This will be used to access the device as hostname.local</small>
+                </div>
+            </div>
+
+            <!-- Step 2: HTTP Authentication -->
+            <div class="setup-step" id="step-2">
+                <h2 class="step-title">HTTP Authentication</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Web Interface Login</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label" for="httpUsername">Username</label>
+                            <input type="text" class="form-control" id="httpUsername" value="admin" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="httpPassword">Password</label>
+                            <input type="password" class="form-control" id="httpPassword" value="admin" required>
+                        </div>
+                        <p class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Please change the default username and password for security!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: MQTT Configuration (Optional) -->
+            <div class="setup-step" id="step-3">
+                <h2 class="step-title">MQTT Configuration (Optional)</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">MQTT Settings</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="mqttEnabled">
+                            <label class="form-check-label" for="mqttEnabled">Enable MQTT</label>
+                        </div>
+
+                        <div id="mqttFields" style="display: none;">
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="mqttBroker">MQTT Broker</label>
+                                        <input type="text" class="form-control" id="mqttBroker" placeholder="192.168.1.100">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="mqttPort">MQTT Port</label>
+                                        <input type="number" class="form-control" id="mqttPort" min="1" max="65535" value="1883">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mqttTopic">MQTT Topic</label>
+                                <input type="text" class="form-control" id="mqttTopic" placeholder="mushroom/tent" value="mushroom/tent">
+                            </div>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="mqttUsername">MQTT Username</label>
+                                        <input type="text" class="form-control" id="mqttUsername">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="mqttPassword">MQTT Password</label>
+                                        <input type="password" class="form-control" id="mqttPassword">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: GPIO Configuration -->
+            <div class="setup-step" id="step-4">
+                <h2 class="step-title">GPIO Configuration</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Pin Assignments</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="useDefaultGpio" checked>
+                            <label class="form-check-label" for="useDefaultGpio">Use default GPIO configuration</label>
+                        </div>
+
+                        <div id="customGpioFields" style="display: none;">
+                            <!-- Sensor Pins -->
+                            <h4>Sensor Pins</h4>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="upperDhtPin">Upper DHT Pin</label>
+                                        <input type="number" class="form-control" id="upperDhtPin" min="0" max="39" value="13">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="lowerDhtPin">Lower DHT Pin</label>
+                                        <input type="number" class="form-control" id="lowerDhtPin" min="0" max="39" value="14">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="scdSdaPin">SCD40 SDA Pin</label>
+                                        <input type="number" class="form-control" id="scdSdaPin" min="0" max="39" value="21">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="scdSclPin">SCD40 SCL Pin</label>
+                                        <input type="number" class="form-control" id="scdSclPin" min="0" max="39" value="22">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Relay Pins -->
+                            <h4 class="mt-3">Relay Pins</h4>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay1Pin">Relay 1 Pin (Main PSU)</label>
+                                        <input type="number" class="form-control" id="relay1Pin" min="0" max="39" value="16">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay2Pin">Relay 2 Pin (UV Light)</label>
+                                        <input type="number" class="form-control" id="relay2Pin" min="0" max="39" value="17">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay3Pin">Relay 3 Pin (Grow Light)</label>
+                                        <input type="number" class="form-control" id="relay3Pin" min="0" max="39" value="19">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay4Pin">Relay 4 Pin (Tub Fans)</label>
+                                        <input type="number" class="form-control" id="relay4Pin" min="0" max="39" value="26">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay5Pin">Relay 5 Pin (Humidifier)</label>
+                                        <input type="number" class="form-control" id="relay5Pin" min="0" max="39" value="33">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay6Pin">Relay 6 Pin (Heater)</label>
+                                        <input type="number" class="form-control" id="relay6Pin" min="0" max="39" value="23">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay7Pin">Relay 7 Pin (IN/OUT Fans)</label>
+                                        <input type="number" class="form-control" id="relay7Pin" min="0" max="39" value="25">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="relay8Pin">Relay 8 Pin (Reserved)</label>
+                                        <input type="number" class="form-control" id="relay8Pin" min="0" max="39" value="35">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Update Timings -->
+            <div class="setup-step" id="step-5">
+                <h2 class="step-title">Update Timings</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Sensor and Graph Update Intervals</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="dhtInterval">DHT Read Interval (sec)</label>
+                                    <input type="number" class="form-control" id="dhtInterval" min="1" max="120" value="5" required>
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="scdInterval">SCD40 Read Interval (sec)</label>
+                                    <input type="number" class="form-control" id="scdInterval" min="1" max="120" value="10" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="graphInterval">Graph Update Interval (sec)</label>
+                                    <input type="number" class="form-control" id="graphInterval" min="5" max="300" value="30" required>
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="graphPoints">Graph Max Points</label>
+                                    <input type="number" class="form-control" id="graphPoints" min="10" max="500" value="100" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Relay Configuration -->
+            <div class="setup-step" id="step-6">
+                <h2 class="step-title">Relay Configuration</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Environmental Thresholds</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="humidityLow">Humidity Low Threshold (%)</label>
+                                    <input type="number" class="form-control" id="humidityLow" min="0" max="100" value="50">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="humidityHigh">Humidity High Threshold (%)</label>
+                                    <input type="number" class="form-control" id="humidityHigh" min="0" max="100" value="85">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="temperatureLow">Temperature Low Threshold (°C)</label>
+                                    <input type="number" class="form-control" id="temperatureLow" min="0" max="50" value="20">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="temperatureHigh">Temperature High Threshold (°C)</label>
+                                    <input type="number" class="form-control" id="temperatureHigh" min="0" max="50" value="24">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="co2Low">CO₂ Low Threshold (ppm)</label>
+                                    <input type="number" class="form-control" id="co2Low" min="400" max="5000" value="1000">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="co2High">CO₂ High Threshold (ppm)</label>
+                                    <input type="number" class="form-control" id="co2High" min="400" max="5000" value="1600">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="overrideDuration">User Override Duration (min)</label>
+                            <input type="number" class="form-control" id="overrideDuration" min="1" max="240" value="5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="setup-nav">
+                <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button type="button" class="btn btn-primary" id="nextBtn">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+                <button type="button" class="btn btn-success" id="submitBtn" style="display: none;">
+                    <i class="fas fa-check"></i> Save Configuration
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- WiFi Scan Modal -->
+    <div id="wifiScanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Available WiFi Networks</h2>
+                <button class="modal-close" id="closeWifiScanModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="scanningMessage">
+                    <p class="text-center">Scanning for WiFi networks...</p>
+                    <div class="d-flex justify-content-center">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    </div>
+                </div>
+                <div id="wifiNetworksList" style="display: none;">
+                    <!-- WiFi networks will be populated via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelWifiScanBtn">Cancel</button>
+                <button type="button" class="btn btn-info" id="refreshWifiScanBtn">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Setup Modal -->
+    <div id="setupCompleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Setup Complete</h2>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+                    <h3>Configuration Saved Successfully</h3>
+                    <p>The device will now reboot and start in normal operation mode.</p>
+                    <p>You can access the dashboard at:</p>
+                    <p><strong id="deviceUrl">http://hostname.local</strong></p>
+                    <p>Please make a note of this address.</p>
+                    <div class="progress mt-3" id="rebootProgressContainer">
+                        <div id="rebootProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p id="rebootStatus" class="mt-2">Rebooting in 5 seconds...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/init_cfg.js"></script>
+</body>
+</html>

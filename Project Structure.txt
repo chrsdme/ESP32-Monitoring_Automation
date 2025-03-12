@@ -1,0 +1,91 @@
+mushroom-tent-controller/
+├── platformio.ini                    # PlatformIO project configuration
+├── partitions.csv                    # Custom partition table
+├── src/
+│   ├── main.cpp                      # Main application entry point
+│   ├── core/                         # Core application modules
+│   │   ├── AppCore.h                 # Core orchestrator header
+│   │   ├── AppCore.cpp               # Core orchestrator implementation
+│   │   ├── RTOSConfig.h              # RTOS configuration
+│   │   ├── SecurityManager.h         # Security and authentication
+│   │   └── SecurityManager.cpp
+│   │
+│   ├── network/                      # Network management modules
+│   │   ├── NetworkManager.h          # WiFi and network handling header
+│   │   ├── NetworkManager.cpp        # WiFi and network implementation
+│   │   ├── MQTTClient.h              # MQTT client header
+│   │   └── MQTTClient.cpp            # MQTT client implementation
+│   │
+│   ├── system/                       # System management modules
+│   │   ├── StorageManager.h          # SPIFFS and NVS storage
+│   │   ├── StorageManager.cpp
+│   │   ├── TimeManager.h             # Time synchronization
+│   │   ├── TimeManager.cpp
+│   │   ├── MaintenanceManager.h      # Diagnostics and recovery
+│   │   ├── MaintenanceManager.cpp
+│   │   ├── LogManager.h              # Logging
+│   │   ├── LogManager.cpp
+│   │   ├── PowerManager.h            # Power management
+│   │   ├── PowerManager.cpp
+│   │   ├── NotificationManager.h     # Alerts and notifications
+│   │   ├── NotificationManager.cpp
+│   │   ├── ProfileManager.h          # User profiles
+│   │   └── ProfileManager.cpp
+│   │
+│   ├── web/                          # Web server and API
+│   │   ├── WebServer.h               # Web server header
+│   │   ├── WebServer.cpp             # Web server implementation
+│   │   ├── APIEndpoints.h            # API definition
+│   │   └── APIEndpoints.cpp          # API implementation
+│   │
+│   ├── ota/                          # OTA update management
+│   │   ├── OTAManager.h              # OTA update header
+│   │   ├── OTAManager.cpp            # OTA implementation
+│   │   ├── VersionManager.h          # Version tracking
+│   │   └── VersionManager.cpp        # Version implementation
+│   │
+│   ├── components/                   # Hardware components
+│   │   ├── SensorManager.h           # Sensor management
+│   │   ├── SensorManager.cpp
+│   │   ├── RelayManager.h            # Relay management
+│   │   ├── RelayManager.cpp
+│   │   ├── TapoManager.h             # Tapo P100 integration
+│   │   └── TapoManager.cpp
+│   │
+│   └── utils/                        # Utility functions
+│       ├── Constants.h               # Global constants
+│       ├── Helpers.h                 # Helper functions
+│       └── Helpers.cpp
+│
+├── data/                             # SPIFFS data (web files, configs)
+│   ├── index.html                    # Main dashboard
+│   ├── system.html                   # System information page
+│   ├── init_cfg.html                 # Initial configuration page
+│   ├── tapo.html                     # Tapo device management page
+│   ├── css/
+│   │   ├── styles.css                # Main stylesheet
+│   │   └── bootstrap.min.css         # Bootstrap for responsive design
+│   ├── js/
+│   │   ├── main.js                   # Main JavaScript
+│   │   ├── dashboard.js              # Dashboard functions
+│   │   ├── settings.js               # Settings functions
+│   │   ├── network.js                # Network functions
+│   │   ├── system.js                 # System page functions
+│   │   ├── profiles.js               # Profile management
+│   │   ├── tapo.js                   # Tapo device functions
+│   │   ├── chart.min.js              # Chart library
+│   │   └── bootstrap.bundle.min.js   # Bootstrap JavaScript
+│   └── config/
+│       ├── default_config.json       # Default configuration
+│       ├── profiles.json             # Saved profiles
+│       └── network.json              # Network configuration
+│
+├── include/                          # Global header files
+│   └── Version.h                     # Version definitions
+│
+└── docs/                             # Documentation
+    ├── API.md                        # API documentation
+    ├── SystemDocs.md                 # System documentation
+    ├── UserManual.md                 # User manual
+    ├── README.md                     # Project overview
+    └── LICENSE                       # Apache 2.0 license

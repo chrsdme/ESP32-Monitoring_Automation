@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mushroom Tent Controller</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header with navigation -->
+    <header class="header">
+        <div class="container header-container">
+            <h1 class="logo">Mushroom Tent Controller</h1>
+            <div class="d-flex align-items-center">
+                <button id="lightDarkToggle" class="theme-toggle" title="Toggle light/dark mode">
+                    <i class="fas fa-lightbulb"></i>
+                </button>
+                <button id="clearGraphBtn" class="btn btn-sm ml-2" title="Clear Graphs">
+                    <i class="fas fa-eraser"></i> Clear Graphs
+                </button>
+                <button id="profilesBtn" class="btn btn-sm ml-2" title="Profiles">
+                    <i class="fas fa-sliders-h"></i> Profiles
+                </button>
+                <nav>
+                    <ul class="nav">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" id="settingsLink">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" id="networkLink">Network</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="system.html" class="nav-link">System</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="container mt-3">
+        <!-- Status alerts -->
+        <div id="alertContainer" class="mb-3" style="display: none;"></div>
+
+        <!-- Graph section -->
+        <div class="row mb-3">
+            <div class="col-half">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Temperature</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="graph-container">
+                            <canvas id="temperatureChart" class="graph"></canvas>
+                            <div id="tempUpdateIndicator" class="graph-update-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-half">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Humidity</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="graph-container">
+                            <canvas id="humidityChart" class="graph"></canvas>
+                            <div id="humidityUpdateIndicator" class="graph-update-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor readings -->
+        <div class="row mb-3">
+            <div class="col-third">
+                <div class="sensor-card">
+                    <h3 class="sensor-title">Upper DHT</h3>
+                    <div class="sensor-value" id="upperDhtTemp">-- °C</div>
+                    <div class="sensor-value" id="upperDhtHumidity">-- %</div>
+                    <div id="upperDhtIndicator" class="sensor-update-indicator"></div>
+                </div>
+            </div>
+            <div class="col-third">
+                <div class="sensor-card">
+                    <h3 class="sensor-title">Lower DHT</h3>
+                    <div class="sensor-value" id="lowerDhtTemp">-- °C</div>
+                    <div class="sensor-value" id="lowerDhtHumidity">-- %</div>
+                    <div id="lowerDhtIndicator" class="sensor-update-indicator"></div>
+                </div>
+            </div>
+            <div class="col-third">
+                <div class="sensor-card">
+                    <h3 class="sensor-title">SCD40</h3>
+                    <div class="sensor-value" id="scdTemp">-- °C</div>
+                    <div class="sensor-value" id="scdHumidity">-- %</div>
+                    <div class="sensor-value" id="scdCo2">-- ppm</div>
+                    <div id="scdIndicator" class="sensor-update-indicator"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relay controls -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Relay Controls</h2>
+            </div>
+            <div class="card-body">
+                <div class="relay-controls" id="relayControlsContainer">
+                    <!-- Relay controls will be populated via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Settings</h2>
+                <button class="modal-close" id="closeSettingsModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <!-- Logging Settings -->
+                    <h3>Logging Settings</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="logLevel">Log Level</label>
+                        <select class="form-control" id="logLevel">
+                            <option value="0">DEBUG</option>
+                            <option value="1">INFO</option>
+                            <option value="2">WARN</option>
+                            <option value="3">ERROR</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label" for="maxLogSize">Max Log Size (KB)</label>
+                                <input type="number" class="form-control" id="maxLogSize" min="10" max="500" value="50">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label" for="logFlushInterval">Log Flush Interval (sec)</label>
+                                <input type="number" class="form-control" id="logFlushInterval" min="10" max="3600" value="60">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="remoteLogServer">Remote Log Server</label>
+                        <input type="text" class="form-control" id="remoteLogServer" placeholder="192.168.1.100:8080">
+                    </div>
+
+                    <!-- Sensor Settings -->
+                    <h3 class="mt-3">Sensor Settings</h3>
+                    <div class="row">
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="dhtInterval">DHT Read Interval (sec)</label>
+                                <input type="number" class="form-control" id="dhtInterval" min="1" max="120" value="5">
+                            </div>
+                        </div>
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="scdInterval">SCD40 Read Interval (sec)</label>
+                                <input type="number" class="form-control" id="scdInterval" min="1" max="120" value="10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="graphInterval">Graph Update Interval (sec)</label>
+                                <input type="number" class="form-control" id="graphInterval" min="5" max="300" value="30">
+                            </div>
+                        </div>
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="graphPoints">Graph Max Points</label>
+                                <input type="number" class="form-control" id="graphPoints" min="10" max="500" value="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sensorErrorCount">Sensor Error Count for Reset</label>
+                        <input type="number" class="form-control" id="sensorErrorCount" min="1" max="20" value="5">
+                    </div>
+
+                    <!-- Sensor PIN Configuration -->
+                    <h3 class="mt-3">Sensor PIN Configuration</h3>
+                    <div class="row">
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="upperDhtPin">Upper DHT Pin</label>
+                                <input type="number" class="form-control" id="upperDhtPin" min="0" max="39" value="13">
+                            </div>
+                        </div>
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="lowerDhtPin">Lower DHT Pin</label>
+                                <input type="number" class="form-control" id="lowerDhtPin" min="0" max="39" value="14">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="scdSdaPin">SCD40 SDA Pin</label>
+                                <input type="number" class="form-control" id="scdSdaPin" min="0" max="39" value="21">
+                            </div>
+                        </div>
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="scdSclPin">SCD40 SCL Pin</label>
+                                <input type="number" class="form-control" id="scdSclPin" min="0" max="39" value="22">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reboot Scheduler -->
+                    <h3 class="mt-3">Reboot Scheduler</h3>
+                    <div class="row">
+                        <div class="col-third">
+                            <div class="form-group">
+                                <label class="form-label" for="rebootDay">Day of Week</label>
+                                <select class="form-control" id="rebootDay">
+                                    <option value="0">Sunday</option>
+                                    <option value="1">Monday</option>
+                                    <option value="2">Tuesday</option>
+                                    <option value="3">Wednesday</option>
+                                    <option value="4">Thursday</option>
+                                    <option value="5">Friday</option>
+                                    <option value="6">Saturday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-third">
+                            <div class="form-group">
+                                <label class="form-label" for="rebootHour">Hour</label>
+                                <select class="form-control" id="rebootHour">
+                                    <!-- Hours will be populated via JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-third">
+                            <div class="form-group">
+                                <label class="form-label" for="rebootMinute">Minute</label>
+                                <select class="form-control" id="rebootMinute">
+                                    <!-- Minutes will be populated via JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableReboot">
+                        <label class="form-check-label" for="enableReboot">Enable weekly reboot</label>
+                    </div>
+
+                    <!-- Sleep Mode Configuration -->
+                    <h3 class="mt-3">Sleep Mode</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="sleepMode">Sleep Mode</label>
+                        <select class="form-control" id="sleepMode">
+                            <option value="0">No Sleep</option>
+                            <option value="1">Modem Sleep (WiFi+BLE off)</option>
+                            <option value="2">Light Sleep (WiFi+BLE, CPU OFF)</option>
+                            <option value="3">Deep Sleep (everything off apart from essential hardware)</option>
+                            <option value="4">Hibernation (everything off apart from RTC)</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="sleepTimeFrom">Sleep From</label>
+                                <input type="time" class="form-control" id="sleepTimeFrom" value="00:00">
+                            </div>
+                        </div>
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="sleepTimeTo">Sleep To</label>
+                                <input type="time" class="form-control" id="sleepTimeTo" value="06:00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Actions -->
+                    <h3 class="mt-3">System Actions</h3>
+                    <div class="d-flex justify-content-between mb-3">
+                        <button type="button" class="btn btn-warning" id="rebootBtn">
+                            <i class="fas fa-redo"></i> Reboot Now
+                        </button>
+                        <button type="button" class="btn btn-danger" id="factoryResetBtn">
+                            <i class="fas fa-trash-alt"></i> Factory Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSettingsBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Modal -->
+    <div id="networkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Network Configuration</h2>
+                <button class="modal-close" id="closeNetworkModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="networkForm">
+                    <!-- WiFi Configuration -->
+                    <h3>WiFi Configuration</h3>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h4 class="card-title">WiFi Connection 1</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="wifi1Ssid">SSID</label>
+                                        <input type="text" class="form-control" id="wifi1Ssid">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="wifi1Password">Password</label>
+                                        <input type="password" class="form-control" id="wifi1Password">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-info" id="scanWifi1Btn">
+                                <i class="fas fa-wifi"></i> Scan Networks
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h4 class="card-title">WiFi Connection 2</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="wifi2Ssid">SSID</label>
+                                        <input type="text" class="form-control" id="wifi2Ssid">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="wifi2Password">Password</label>
+                                        <input type="password" class="form-control" id="wifi2Password">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-info" id="scanWifi2Btn">
+                                <i class="fas fa-wifi"></i> Scan Networks
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h4 class="card-title">WiFi Connection 3</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="wifi3Ssid">SSID</label>
+                                        <input type="text" class="form-control" id="wifi3Ssid">
+                                    </div>
+                                </div>
+                                <div class="col-half">
+                                    <div class="form-group">
+                                        <label class="form-label" for="wifi3Password">Password</label>
+                                        <input type="password" class="form-control" id="wifi3Password">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-info" id="scanWifi3Btn">
+                                <i class="fas fa-wifi"></i> Scan Networks
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hostname Configuration -->
+                    <h3 class="mt-3">Hostname</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="hostname">Hostname</label>
+                        <input type="text" class="form-control" id="hostname" placeholder="mushroom">
+                    </div>
+
+                    <!-- IP Configuration -->
+                    <h3 class="mt-3">IP Configuration</h3>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="ipConfig" id="dhcpEnabled" value="dhcp" checked>
+                        <label class="form-check-label" for="dhcpEnabled">DHCP (Automatic IP)</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="ipConfig" id="staticIpEnabled" value="static">
+                        <label class="form-check-label" for="staticIpEnabled">Static IP</label>
+                    </div>
+
+                    <div id="staticIpFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="staticIp">IP Address</label>
+                                    <input type="text" class="form-control" id="staticIp" placeholder="192.168.1.100">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="subnetMask">Subnet Mask</label>
+                                    <input type="text" class="form-control" id="subnetMask" placeholder="255.255.255.0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="gateway">Gateway</label>
+                                    <input type="text" class="form-control" id="gateway" placeholder="192.168.1.1">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="dns1">DNS Server 1</label>
+                                    <input type="text" class="form-control" id="dns1" placeholder="8.8.8.8">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dns2">DNS Server 2 (Optional)</label>
+                            <input type="text" class="form-control" id="dns2" placeholder="8.8.4.4">
+                        </div>
+                    </div>
+
+                    <!-- WiFi Watchdog -->
+                    <h3 class="mt-3">WiFi Watchdog</h3>
+                    <div class="row">
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="minRssi">Minimum RSSI</label>
+                                <input type="number" class="form-control" id="minRssi" min="-100" max="-40" value="-80">
+                            </div>
+                        </div>
+                        <div class="col-half">
+                            <div class="form-group">
+                                <label class="form-label" for="wifiCheckInterval">Check Interval (sec)</label>
+                                <input type="number" class="form-control" id="wifiCheckInterval" min="10" max="300" value="30">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MQTT Configuration -->
+                    <h3 class="mt-3">MQTT Configuration</h3>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="mqttEnabled">
+                        <label class="form-check-label" for="mqttEnabled">Enable MQTT</label>
+                    </div>
+
+                    <div id="mqttFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="mqttBroker">MQTT Broker</label>
+                                    <input type="text" class="form-control" id="mqttBroker" placeholder="192.168.1.100">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="mqttPort">MQTT Port</label>
+                                    <input type="number" class="form-control" id="mqttPort" min="1" max="65535" value="1883">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="mqttTopic">MQTT Topic</label>
+                            <input type="text" class="form-control" id="mqttTopic" placeholder="mushroom/tent">
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="mqttUsername">MQTT Username</label>
+                                    <input type="text" class="form-control" id="mqttUsername">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="mqttPassword">MQTT Password</label>
+                                    <input type="password" class="form-control" id="mqttPassword">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelNetworkBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveNetworkBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WiFi Scan Modal -->
+    <div id="wifiScanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Available WiFi Networks</h2>
+                <button class="modal-close" id="closeWifiScanModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="scanningMessage">
+                    <p class="text-center">Scanning for WiFi networks...</p>
+                    <div class="d-flex justify-content-center">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    </div>
+                </div>
+                <div id="wifiNetworksList" style="display: none;">
+                    <!-- WiFi networks will be populated via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelWifiScanBtn">Cancel</button>
+                <button type="button" class="btn btn-info" id="refreshWifiScanBtn">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profiles Modal -->
+    <div id="profilesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Profile Management</h2>
+                <button class="modal-close" id="closeProfilesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Profile Selector -->
+                <div class="form-group">
+                    <label class="form-label" for="profileSelect">Select Profile</label>
+                    <div class="d-flex">
+                        <select class="form-control" id="profileSelect">
+                            <!-- Profiles will be populated via JavaScript -->
+                        </select>
+                        <button type="button" class="btn btn-primary ml-2" id="loadProfileBtn">Load</button>
+                    </div>
+                </div>
+
+                <!-- Environmental Thresholds -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Environmental Thresholds</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="humidityLow">Humidity Low Threshold (%)</label>
+                                    <input type="number" class="form-control" id="humidityLow" min="0" max="100" value="50">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="humidityHigh">Humidity High Threshold (%)</label>
+                                    <input type="number" class="form-control" id="humidityHigh" min="0" max="100" value="85">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="temperatureLow">Temperature Low Threshold (°C)</label>
+                                    <input type="number" class="form-control" id="temperatureLow" min="0" max="50" value="20">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="temperatureHigh">Temperature High Threshold (°C)</label>
+                                    <input type="number" class="form-control" id="temperatureHigh" min="0" max="50" value="24">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="co2Low">CO₂ Low Threshold (ppm)</label>
+                                    <input type="number" class="form-control" id="co2Low" min="400" max="5000" value="1000">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="co2High">CO₂ High Threshold (ppm)</label>
+                                    <input type="number" class="form-control" id="co2High" min="400" max="5000" value="1600">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cycling Configuration -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Fan Cycling Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="onDuration">On Duration (min)</label>
+                                    <input type="number" class="form-control" id="onDuration" min="1" max="120" value="5">
+                                </div>
+                            </div>
+                            <div class="col-half">
+                                <div class="form-group">
+                                    <label class="form-label" for="cycleInterval">Cycle Interval (min)</label>
+                                    <input type="number" class="form-control" id="cycleInterval" min="5" max="1440" value="60">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relay Operating Times -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Relay Operating Times</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="relayTimesContainer">
+                            <!-- Relay times will be populated via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Override Duration -->
+                <div class="form-group">
+                    <label class="form-label" for="overrideDuration">User Override Duration (min)</label>
+                    <input type="number" class="form-control" id="overrideDuration" min="1" max="240" value="5">
+                </div>
+
+                <!-- Profile Management Buttons -->
+                <div class="d-flex justify-content-between mt-3">
+                    <div>
+                        <button type="button" class="btn btn-success" id="saveProfileBtn">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                        <button type="button" class="btn btn-info ml-2" id="renameProfileBtn">
+                            <i class="fas fa-edit"></i> Rename
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" id="exportProfilesBtn">
+                            <i class="fas fa-file-export"></i> Export All
+                        </button>
+                        <button type="button" class="btn btn-secondary ml-2" id="importProfilesBtn">
+                            <i class="fas fa-file-import"></i> Import
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeProfilesBtn">Close</button>
+                <button type="button" class="btn btn-primary" id="applyProfileBtn">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import file input (hidden) -->
+    <input type="file" id="profileImportInput" style="display: none;" accept=".json">
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.7.0/chart.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
