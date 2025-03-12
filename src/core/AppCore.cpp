@@ -292,4 +292,4 @@
      // Start the web server for configuration
      _webServer.startConfigurationMode();
      
-     _logManager.log(LogLevel::INFO, "System"
+     _logManager.log(LogLevel::INFO, "System");
