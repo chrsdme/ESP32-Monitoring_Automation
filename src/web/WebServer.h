@@ -1,6 +1,6 @@
 /**
  * @file WebServer.h
- * @brief Manages the web server and API endpoints
+ * @brief Manages the web server and API endpoints (non-SSL version)
  */
 
  #ifndef WEB_SERVER_H
@@ -8,10 +8,9 @@
  
  #include <Arduino.h>
  #include <functional>
- #include "ESPAsyncWebServerFix.h" 
- #include "AsyncWebServerWrapper.h"
  #include <AsyncJson.h>
  #include <ArduinoJson.h>
+ #include <ESPAsyncWebServer.h>
  #include <SPIFFS.h>
  #include <freertos/FreeRTOS.h>
  #include <freertos/task.h>
@@ -20,6 +19,7 @@
  
  // Forward declarations
  class AppCore;
+ class APIEndpoints;
  
  /**
   * @class WebServer
@@ -99,6 +99,9 @@
      // Web server instance
      AsyncWebServer* _server;
      
+     // API endpoints manager
+     APIEndpoints* _apiEndpoints;
+     
      // Configuration
      uint16_t _port;
      String _username;
@@ -110,44 +113,17 @@
      
      // RTOS resources
      SemaphoreHandle_t _webServerMutex;
-     TaskHandle_t _webServerTaskHandle;
      
      // Private methods
      void setupConfigModeRoutes();
-     void setupNormalModeRoutes();
      void setupCommonRoutes();
      
      void handleWiFiScan(AsyncWebServerRequest* request);
      void handleTestWiFi(AsyncWebServerRequest* request, JsonVariant& json);
      void handleSaveSettings(AsyncWebServerRequest* request, JsonVariant& json);
      
-     void handleGetSensorData(AsyncWebServerRequest* request);
-     void handleGetGraphData(AsyncWebServerRequest* request);
-     void handleGetRelayStatus(AsyncWebServerRequest* request);
-     void handleSetRelayState(AsyncWebServerRequest* request, JsonVariant& json);
-     void handleGetSettings(AsyncWebServerRequest* request);
-     void handleUpdateSettings(AsyncWebServerRequest* request, JsonVariant& json);
-     void handleGetNetworkConfig(AsyncWebServerRequest* request);
-     void handleUpdateNetworkConfig(AsyncWebServerRequest* request, JsonVariant& json);
-     void handleGetEnvironmentalThresholds(AsyncWebServerRequest* request);
-     void handleUpdateEnvironmentalThresholds(AsyncWebServerRequest* request, JsonVariant& json);
-     void handleGetSystemInfo(AsyncWebServerRequest* request);
-     void handleGetFilesList(AsyncWebServerRequest* request);
-     void handleFileDelete(AsyncWebServerRequest* request);
-     void handleFileUpload(AsyncWebServerRequest* request, String filename, size_t index, uint8_t* data, size_t len, bool final);
-     void handleReboot(AsyncWebServerRequest* request);
-     void handleFactoryReset(AsyncWebServerRequest* request);
-     
-     // Profile management
-     void handleGetProfiles(AsyncWebServerRequest* request);
-     void handleSaveProfile(AsyncWebServerRequest* request, JsonVariant& json);
-     void handleLoadProfile(AsyncWebServerRequest* request, JsonVariant& json);
-     void handleExportProfiles(AsyncWebServerRequest* request);
-     void handleImportProfiles(AsyncWebServerRequest* request, JsonVariant& json);
-     
      // Helper methods
      String getContentType(const String& filename);
-     void loadDefaultConfigFile();
  };
  
  #endif // WEB_SERVER_H
