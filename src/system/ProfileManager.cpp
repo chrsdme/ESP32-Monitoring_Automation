@@ -128,8 +128,19 @@
          for (const auto& entry : _profiles) {
             JsonObject profileObj = profilesObj.createNestedObject(entry.name);
             if (entry.doc.is<JsonObject>()) {
-                JsonObject docObj = entry.doc;
-                profileObj.set(docObj);
+                // Use serializeJson to copy the contents instead of direct conversion
+                String tempJson;
+                serializeJson(entry.doc, tempJson);
+                
+                // Parse it into the target object
+                DynamicJsonDocument tempDoc(8192);
+                deserializeJson(tempDoc, tempJson);
+                
+                // Now copy all key-value pairs
+                JsonObject tempObj = tempDoc.as<JsonObject>();
+                for (JsonPair kv : tempObj) {
+                    profileObj[kv.key()] = kv.value();
+                }
             }
         }
          
@@ -319,7 +330,7 @@
     }
     
     // Access as JsonObject (without using as<>())
-    JsonObject jsonObject = json;
+    JsonObject jsonObject = json.as<JsonObject>();
     if (!jsonObject.containsKey("profiles")) {
         return false;
     }
@@ -330,7 +341,7 @@
     }
     
     // Now safely get the profiles object
-    JsonObject profilesObj = jsonObject["profiles"];
+    JsonObject profilesObj = jsonObject["profiles"].as<JsonObject>();
     
     // Take mutex to ensure thread safety
     if (xSemaphoreTake(_profileMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
@@ -343,7 +354,7 @@
             
             // Make sure this value is an object before trying to use it
             if (kv.value().is<JsonObject>()) {
-                JsonObject settings = kv.value();
+                JsonObject settings = kv.value().as<JsonObject>();
                 
                 ProfileEntry entry(name, 8192);
                 entry.doc.set(settings);
@@ -540,22 +551,22 @@
          _profiles.clear();
          
         // Load profiles         
-if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
-    JsonObject profilesObj = doc["profiles"];
-    for (JsonPair kv : profilesObj) {
-        // Safe conversion when we know it's an object
-        String name = kv.key().c_str();
-        // Check if this element is an object before converting
-        if (kv.value().is<JsonObject>()) {
-            JsonObject settings = kv.value();
-            
-            ProfileEntry entry(name, 8192);
-            entry.doc.set(settings);
-            
-            _profiles.push_back(entry);
+        if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
+            JsonObject profilesObj = doc["profiles"].as<JsonObject>();
+            for (JsonPair kv : profilesObj) {
+                // Safe conversion when we know it's an object
+                String name = kv.key().c_str();
+                // Check if this element is an object before converting
+                if (kv.value().is<JsonObject>()) {
+                    JsonObject settings = kv.value().as<JsonObject>();
+                    
+                    ProfileEntry entry(name, 8192);
+                    entry.doc.set(settings);
+                    
+                    _profiles.push_back(entry);
+                }
+            }
         }
-    }
-}
          
          // Get current profile
          if (doc.containsKey("current_profile")) {
@@ -598,11 +609,21 @@ if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
      for (const auto& entry : _profiles) {
         JsonObject profileObj = profilesObj.createNestedObject(entry.name);
         if (entry.doc.is<JsonObject>()) {
-            JsonObject docObj = entry.doc;
-            profileObj.set(docObj);
+            // Use serializeJson to copy the contents instead of direct conversion
+            String tempJson;
+            serializeJson(entry.doc, tempJson);
+            
+            // Parse it into the target object
+            DynamicJsonDocument tempDoc(8192);
+            deserializeJson(tempDoc, tempJson);
+            
+            // Now copy all key-value pairs
+            JsonObject tempObj = tempDoc.as<JsonObject>();
+            for (JsonPair kv : tempObj) {
+                profileObj[kv.key()] = kv.value();
+            }
         }
     }
-
      
      doc["current_profile"] = _currentProfile;
      
@@ -631,28 +652,41 @@ if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
  }
  
  void ProfileManager::applyProfileSettings(const DynamicJsonDocument& profileSettings) {
+    // Serialize the entire document to a string
+    String json;
+    serializeJson(profileSettings, json);
+    
+    // Parse it back into a temporary document
+    DynamicJsonDocument tempDoc(8192);
+    deserializeJson(tempDoc, json);
+    
+    // Now we can safely work with the copy
+    
     // Apply environment settings
-    if (profileSettings.containsKey("environment") && profileSettings["environment"].is<JsonObject>()) {
-        JsonObject environmentObj = profileSettings["environment"];
+    if (tempDoc.containsKey("environment")) {
+        const JsonObject& envObj = tempDoc["environment"];
         
-        if (environmentObj.containsKey("humidity_low") && environmentObj.containsKey("humidity_high") && 
-            environmentObj.containsKey("temperature_low") && environmentObj.containsKey("temperature_high") && 
-            environmentObj.containsKey("co2_low") && environmentObj.containsKey("co2_high")) {
+        if (envObj.containsKey("humidity_low") && 
+            envObj.containsKey("humidity_high") && 
+            envObj.containsKey("temperature_low") && 
+            envObj.containsKey("temperature_high") && 
+            envObj.containsKey("co2_low") && 
+            envObj.containsKey("co2_high")) {
             
             getAppCore()->getRelayManager()->setEnvironmentalThresholds(
-                environmentObj["humidity_low"].as<float>(),
-                environmentObj["humidity_high"].as<float>(),
-                environmentObj["temperature_low"].as<float>(),
-                environmentObj["temperature_high"].as<float>(),
-                environmentObj["co2_low"].as<float>(),
-                environmentObj["co2_high"].as<float>()
+                envObj["humidity_low"].as<float>(),
+                envObj["humidity_high"].as<float>(),
+                envObj["temperature_low"].as<float>(),
+                envObj["temperature_high"].as<float>(),
+                envObj["co2_low"].as<float>(),
+                envObj["co2_high"].as<float>()
             );
         }
     }
     
     // Apply timing settings
-    if (profileSettings.containsKey("timing") && profileSettings["timing"].is<JsonObject>()) {
-        JsonObject timingObj = profileSettings["timing"];
+    if (tempDoc.containsKey("timing")) {
+        const JsonObject& timingObj = tempDoc["timing"];
         
         if (timingObj.containsKey("dht_interval") && timingObj.containsKey("scd_interval")) {
             getAppCore()->getSensorManager()->setSensorIntervals(
@@ -660,13 +694,11 @@ if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
                 timingObj["scd_interval"].as<uint32_t>() * 1000
             );
         }
-        
-        // Graph settings would be applied elsewhere
     }
     
     // Apply cycle settings
-    if (profileSettings.containsKey("cycle") && profileSettings["cycle"].is<JsonObject>()) {
-        JsonObject cycleObj = profileSettings["cycle"];
+    if (tempDoc.containsKey("cycle")) {
+        const JsonObject& cycleObj = tempDoc["cycle"];
         
         if (cycleObj.containsKey("on_duration") && cycleObj.containsKey("interval")) {
             getAppCore()->getRelayManager()->setCycleConfig(
@@ -677,16 +709,18 @@ if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
     }
     
     // Apply relay operating times
-    if (profileSettings.containsKey("relay_times") && profileSettings["relay_times"].is<JsonObject>()) {
-        JsonObject relayTimesObj = profileSettings["relay_times"];
+    if (tempDoc.containsKey("relay_times")) {
+        const JsonObject& relayTimesObj = tempDoc["relay_times"];
         
         for (int i = 1; i <= 8; i++) {
             String relayKey = "relay" + String(i);
-            if (relayTimesObj.containsKey(relayKey) && relayTimesObj[relayKey].is<JsonObject>()) {
-                JsonObject relayObj = relayTimesObj[relayKey];
+            if (relayTimesObj.containsKey(relayKey)) {
+                const JsonObject& relayObj = relayTimesObj[relayKey];
                 
-                if (relayObj.containsKey("start_hour") && relayObj.containsKey("start_minute") && 
-                    relayObj.containsKey("end_hour") && relayObj.containsKey("end_minute")) {
+                if (relayObj.containsKey("start_hour") && 
+                    relayObj.containsKey("start_minute") && 
+                    relayObj.containsKey("end_hour") && 
+                    relayObj.containsKey("end_minute")) {
                     
                     getAppCore()->getRelayManager()->setRelayOperatingTime(
                         i,
@@ -701,13 +735,11 @@ if (doc.containsKey("profiles") && doc["profiles"].is<JsonObject>()) {
     }
     
     // Apply MQTT settings
-    if (profileSettings.containsKey("mqtt") && profileSettings["mqtt"].is<JsonObject>()) {
-        JsonObject mqttObj = profileSettings["mqtt"];
+    if (tempDoc.containsKey("mqtt")) {
+        const JsonObject& mqttObj = tempDoc["mqtt"];
         
         if (mqttObj.containsKey("enabled")) {
             _mqttEnabled = mqttObj["enabled"].as<bool>();
         }
-        
-        // Other MQTT settings would be applied to an MQTT client in a real implementation
     }
 }

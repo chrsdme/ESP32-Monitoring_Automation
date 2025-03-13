@@ -1,6 +1,6 @@
 /**
  * @file IPAddressWrapper.h
- * @brief Wrapper for IP address handling with conditional INADDR_NONE definition
+ * @brief Wrapper for IP address handling
  */
 
  #ifndef IP_ADDRESS_WRAPPER_H
@@ -9,18 +9,6 @@
  #include <Arduino.h>
  #include <IPAddress.h>
  
- // Check if IPADDR_NONE is already defined (from lwip)
- #ifndef IPADDR_NONE
-   // Only define INADDR_NONE if it's not already defined
-   #ifndef INADDR_NONE
-     #define INADDR_NONE ((uint32_t)0xffffffffL)
-   #endif
- #else
-   // If IPADDR_NONE is defined, make sure INADDR_NONE uses that value
-   #ifdef INADDR_NONE
-     #undef INADDR_NONE
-   #endif
-   #define INADDR_NONE IPADDR_NONE
- #endif
+ // No INADDR_NONE definition - it's defined by the system headers
  
  #endif // IP_ADDRESS_WRAPPER_H

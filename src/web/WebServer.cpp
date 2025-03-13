@@ -182,7 +182,7 @@
         port = _port;
         
         // Release mutex
-        xSemaphoreGive(_webServerMutex);  // Fixed: _profileMutex → _webServerMutex
+        xSemaphoreGive(_webServerMutex);
     }
     
     return port;
